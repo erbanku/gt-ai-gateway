@@ -38,14 +38,14 @@ async function chatCompletions(c: Context) {
     let body: string = await c.req.text();
     console.log("body:", body);
 
-    let authToken:String|undefined = c.req.header('Authorization');
+    let authToken:string|undefined = c.req.header('Authorization');
 
     let requestOptions = {
         method: 'POST',
         headers: {
             'accept': "*/*",
             'Content-Type': 'application/json',
-            "Authorization": authToken,
+            "Authorization": authToken!,
         },
         body: body,
     }
@@ -111,7 +111,7 @@ async function chatCompletions(c: Context) {
             // if the server emits an error message, throw an exception
             // so it gets handled by the onerror callback below:
             console.log("onMessage:", msg);
-            await streamOutputPipe.writeSSE(msg);
+            await streamOutputPipe!.writeSSE(msg);
         },
         onclose() {
             // if the server closes the connection unexpectedly, retry:
