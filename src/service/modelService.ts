@@ -1,18 +1,16 @@
 import {SgModel} from "../model/sgModel";
+import {SgUser} from "../model/sgUser";
 
 
 async function getModel(modelName:string):Promise<SgModel | null> {
 
-    if(modelName === "qwen-plus"){
-        let config = new SgModel();
-        config.name = "qwen-plus";
-        config.vendor_id = null;
-        //config.url = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+    if(modelName == null)
+        return null;
 
-        return config;
-    }
+    const model = await SgModel.query().where('name', modelName).first();
+    console.log("model:", model);
 
-    return null;
+    return model;
 }
 
 export default {
