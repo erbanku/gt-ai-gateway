@@ -112,7 +112,7 @@ async function sendRequest (c:Context, user:SgUser, modelConfig:SgModel, vendor:
     if(streamResponse === true){
         return streamSSEResponse;
     }else{
-        recordService.update(recordId, {
+        await recordService.update(recordId, {
             response_data:upstreamResponseText,
             status: upstreamStatusCode == 200 ? SgRecordStatus.SUCCESS:SgRecordStatus.FAILED
         })
