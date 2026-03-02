@@ -30,4 +30,8 @@ async function createUser(c: Context) {
   return c.json(instance)
 }
 
-export { listUsers, getUser, createUser }
+export default {
+    listUsers,
+    getUser,
+    createUser
+}

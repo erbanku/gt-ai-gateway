@@ -1,5 +1,4 @@
 import { Model } from 'sutando';
-import { v4 as uuid } from 'uuid';
 import { inspect, InspectOptions } from 'util';
 
 class SgUser extends Model {

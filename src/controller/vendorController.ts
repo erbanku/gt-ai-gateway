@@ -28,4 +28,8 @@ async function createVendor(c: Context) {
   return c.json(instance)
 }
 
-export { listVendors, getVendor, createVendor }
+export default {
+    listVendors,
+    getVendor,
+    createVendor
+}
