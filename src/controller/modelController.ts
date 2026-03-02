@@ -18,4 +18,7 @@ async function listModels(c: Context) {
   return c.json(modelConfigs)
 }
 
-export { createModel, listModels }
+export default {
+    createModel,
+    listModels
+}

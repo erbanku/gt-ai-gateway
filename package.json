@@ -32,6 +32,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "better-sqlite3": "^12.6.2",
     "sqlite3": "^5.1.7",
+    "ts-prune": "^0.10.3",
     "vitest": "^4.0.18",
     "wrangler": "^4.69.0"
   }

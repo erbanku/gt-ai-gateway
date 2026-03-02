@@ -1,6 +1,6 @@
 import { join } from 'path'
 import { serve } from '@hono/node-server'
-import { ormService } from './service/ormService'
+import ormService from './service/ormService'
 import app from './routes'
 
 const DB_PATH = join(process.cwd(), 'local.db')

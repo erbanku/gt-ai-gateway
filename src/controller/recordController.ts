@@ -21,4 +21,8 @@ async function getRecord(c: Context) {
   return c.json(record)
 }
 
-export { listRecords, latestRecords, getRecord }
+export default {
+    listRecords,
+    latestRecords,
+    getRecord
+}

@@ -1,7 +1,7 @@
 import { sutando } from 'sutando';
 import { DatabaseAdapter, D1Adapter, SQLiteAdapter } from './dbAdapter';
 
-export interface ORMOptions {
+interface ORMOptions {
   mode: 'cloud' | 'local';
   dbPath?: string;
 }
@@ -80,4 +80,6 @@ class ORMService {
   }
 }
 
-export const ormService = new ORMService();
+const ormService = new ORMService();
+
+export default ormService;

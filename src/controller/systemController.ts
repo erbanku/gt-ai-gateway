@@ -1,5 +1,5 @@
 import { Context } from 'hono'
-import { ormService } from '../service/ormService'
+import ormService from '../service/ormService'
 
 function welcome(c: Context) {
   const message = ormService.mode === 'cloud'
@@ -8,4 +8,6 @@ function welcome(c: Context) {
   return c.text(message)
 }
 
-export { welcome }
+export default {
+  welcome
+}

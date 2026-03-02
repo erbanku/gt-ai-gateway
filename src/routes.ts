@@ -1,11 +1,11 @@
 import { Hono, MiddlewareHandler } from 'hono'
-import { chatCompletions, anthropicMessages } from './controller/gatewayController'
-import * as ModelController from './controller/modelController'
-import * as UserController from './controller/userController'
-import * as VendorController from './controller/vendorController'
-import * as RecordController from './controller/recordController'
-import * as SystemController from './controller/systemController'
-import { ormService } from './service/ormService'
+import gatewayController from './controller/gatewayController'
+import modelController from './controller/modelController'
+import userController from './controller/userController'
+import vendorController from './controller/vendorController'
+import recordController from './controller/recordController'
+import systemController from './controller/systemController'
+import ormService from './service/ormService'
 
 interface Env {
   DB: D1Database;
@@ -22,30 +22,30 @@ const app = new Hono<{ Bindings: Env }>()
 app.use('*', dbMiddleware)
 
 // System
-app.get('/', SystemController.welcome)
+app.get('/', systemController.welcome)
 
 // Model
-app.post('/model/create.json', ModelController.createModel)
-app.get('/model/list.json', ModelController.listModels)
+app.post('/model/create.json', modelController.createModel)
+app.get('/model/list.json', modelController.listModels)
 
 // User
-app.get('/user/list.json', UserController.listUsers)
-app.get('/user/:id', UserController.getUser)
-app.post('/user/create.json', UserController.createUser)
+app.get('/user/list.json', userController.listUsers)
+app.get('/user/:id', userController.getUser)
+app.post('/user/create.json', userController.createUser)
 
 // Vendor
-app.get('/vendor/list.json', VendorController.listVendors)
-app.get('/vendor/:id', VendorController.getVendor)
-app.post('/vendor/create.json', VendorController.createVendor)
+app.get('/vendor/list.json', vendorController.listVendors)
+app.get('/vendor/:id', vendorController.getVendor)
+app.post('/vendor/create.json', vendorController.createVendor)
 
 // Record
-app.get('/record/list.json', RecordController.listRecords)
-app.get('/record/latest.json', RecordController.latestRecords)
-app.get('/record/:id', RecordController.getRecord)
+app.get('/record/list.json', recordController.listRecords)
+app.get('/record/latest.json', recordController.latestRecords)
+app.get('/record/:id', recordController.getRecord)
 
 // AI
-app.post('/v1/chat/completions', chatCompletions)
-app.post('/v1/messages', anthropicMessages)
+app.post('/v1/chat/completions', gatewayController.chatCompletions)
+app.post('/v1/messages', gatewayController.anthropicMessages)
 
 export { app, Env }
 export default app

@@ -1,4 +1,4 @@
-import { ormService } from './service/ormService'
+import ormService from './service/ormService'
 import app from './routes'
 
 // 初始化云端配置

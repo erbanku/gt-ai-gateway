@@ -118,7 +118,7 @@ async function anthropicMessages(c: Context) {
     return await sender.sendRequest(c, user!, modelConfig!, vendor!);
 }
 
-export {
+export default {
     chatCompletions,
     anthropicMessages
 }
