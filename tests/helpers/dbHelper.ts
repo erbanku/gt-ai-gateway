@@ -105,7 +105,7 @@ async function cleanup(): Promise<void> {
 async function truncate(): Promise<void> {
     if (isWorkerMode) {
         // In worker mode, clear D1 tables by calling clearD1Tables from globalSetup
-        const { clearD1Tables, setupAdminUser } = await import("../globalSetup.worker");
+        const { clearD1Tables, setupAdminUser } = await import("../globalSetup");
         clearD1Tables();
         setupAdminUser();
         return;
