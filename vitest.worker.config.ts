@@ -6,7 +6,7 @@ export default defineConfig({
     include: ['tests/**/*.test.ts', 'src/**/*.test.ts'],
     exclude: ['node_modules'],
     environment: 'node',
-    globalSetup: ['./tests/globalSetup.worker.ts'],
+    globalSetup: ['./tests/globalSetup.ts'],
     // Run tests sequentially to avoid database and port conflicts
     pool: 'forks',
     fileParallelism: false,
