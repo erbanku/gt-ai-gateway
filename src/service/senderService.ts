@@ -14,16 +14,36 @@ import { SgRecordStatus, ApiFormat, VendorType } from "../constants";
 import sseAccumulator from "../util/sseAccumulator";
 
 /**
- * 为 Vendor 填充默认 URL
- * 如果 url 为空，先按 type 填充，如果还为空，按 api_format 填充
+ * Parse URLs JSON string to object
  */
-function fillDefaultUrl(vendor: SgVendor) {
-    if (!vendor?.url) {
-        if (vendor?.type === VendorType.ALIYUN) {
-            vendor.url =
-                "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
-        }
+function parseUrls(urls: string): Record<string, string> {
+    try {
+        return urls ? JSON.parse(urls) : {};
+    } catch {
+        return {};
     }
+}
+
+/**
+ * 为 Vendor 填充默认 URL
+ * 如果指定格式的 URL 为空，按 type 自动填充（保留原有的默认 URL 填充逻辑）
+ */
+function fillDefaultUrl(vendor: SgVendor, format: ApiFormat) {
+    const urls = parseUrls(vendor.urls || "{}");
+
+    // 如果指定格式的 URL 为空，按 type 填充默认值
+    if (!urls[format]) {
+        if (vendor?.type === VendorType.ALIYUN && format === ApiFormat.OPENAI) {
+            return "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+        }
+        // 可以根据需要添加其他类型的默认 URL 填充规则
+    }
+
+    if (!urls[format]) {
+        throw new Error(`vendor does not have url for ${format} format`);
+    }
+
+    return urls[format];
 }
 
 /**
@@ -33,6 +53,7 @@ function fillDefaultUrl(vendor: SgVendor) {
  * @param user - 用户信息
  * @param modelConfig - 模型配置
  * @param vendor - 供应商信息
+ * @param format - API 格式（openai 或 anthropic）
  * @returns Promise<Response> - 响应对象
  */
 async function sendRequest(
@@ -40,15 +61,9 @@ async function sendRequest(
     user: SgUser,
     modelConfig: SgModel,
     vendor: SgVendor,
+    format: ApiFormat,
 ): Promise<Response> {
-    fillDefaultUrl(vendor);
-
-    if (!vendor?.url) {
-        return c.json(
-            { error: "vendor url is empty and no default can be applied" },
-            400,
-        );
-    }
+    const url = fillDefaultUrl(vendor, format);
 
     // 1. 获取请求体，并创建数据库记录
     let body: string = await c.req.text();
@@ -65,7 +80,7 @@ async function sendRequest(
     let upstreamStatusCode: StatusCode | null = null; // 上游响应状态码
     let upstreamResponseText: string | null = null; // 上游响应文本（非流式）
     const accumulator = new sseAccumulator.SSEAccumulator(
-        vendor.api_format === ApiFormat.ANTHROPIC ? 'anthropic' : 'openai'
+        format === ApiFormat.ANTHROPIC ? 'anthropic' : 'openai'
     ); // SSE 消息累加器
 
     // 自定义 Promise，用于等待响应头到达（判断是否为流式）
@@ -84,7 +99,7 @@ async function sendRequest(
         }
     }
 
-    if (vendor.api_format === ApiFormat.ANTHROPIC) {
+    if (format === ApiFormat.ANTHROPIC) {
         headers["x-api-key"] = vendor!.token!;
         headers["anthropic-version"] = "2023-06-01";
     } else {
@@ -104,7 +119,7 @@ async function sendRequest(
     console.log("do fetch upstream");
 
     // 4. 发起 SSE 请求到上游服务
-    upstreamReqPromise = fetchEventSource(vendor!.url!, {
+    upstreamReqPromise = fetchEventSource(url, {
         ...requestOptions,
         // 响应打开时触发
         async onopen(response: Response) {

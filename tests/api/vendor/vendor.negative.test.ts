@@ -31,23 +31,7 @@ describe("Vendor API (Negative)", () => {
         it("should return error when required fields are missing", async () => {
             const vendorData = {
                 name: "Test Vendor",
-                // Missing: type, token, url, api_format
-            };
-            const response = await requestHelper.post(
-                "/vendor/create.json",
-                vendorData,
-            );
-
-            expect(response.status).toBeGreaterThanOrEqual(400);
-        });
-
-        it("should return error when api_format is invalid", async () => {
-            const vendorData = {
-                type: "other",
-                name: "Test Vendor",
-                token: "test-token",
-                url: "https://example.com",
-                api_format: "invalid-format",
+                // Missing: type, token
             };
             const response = await requestHelper.post(
                 "/vendor/create.json",
@@ -61,8 +45,6 @@ describe("Vendor API (Negative)", () => {
             const vendorData = {
                 name: "Test Vendor",
                 token: "test-token",
-                url: "https://example.com",
-                api_format: "openai",
                 // Missing: type
             };
             const response = await requestHelper.post(
@@ -73,20 +55,21 @@ describe("Vendor API (Negative)", () => {
             expect(response.status).toBeGreaterThanOrEqual(400);
         });
 
-        it("should return error when URL is missing", async () => {
+        it("should create vendor without urls", async () => {
             const vendorData = {
                 type: "other",
                 name: "Test Vendor",
                 token: "test-token",
-                api_format: "openai",
-                // Missing: url
+                // urls is optional
             };
             const response = await requestHelper.post(
                 "/vendor/create.json",
                 vendorData,
+                adminToken,
             );
 
-            expect(response.status).toBeGreaterThanOrEqual(400);
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty("urls");
         });
     });
 
@@ -130,16 +113,6 @@ describe("Vendor API (Negative)", () => {
 
             expect(response.status).toBeGreaterThanOrEqual(400);
             expect(response.body).toHaveProperty("error");
-        });
-
-        it("should return error for invalid api_format", async () => {
-            const updateData = { api_format: "invalid-format" };
-            const response = await requestHelper.put(
-                `/vendor/${createdVendorId}`,
-                updateData,
-            );
-
-            expect(response.status).toBeGreaterThanOrEqual(400);
         });
 
         it("should return error for invalid ID format", async () => {

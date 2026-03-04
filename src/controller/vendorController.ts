@@ -4,9 +4,33 @@ import vendorService from "../service/vendorService";
 import errorHandler from "../util/errorHandler";
 
 
+/**
+ * Parse URLs JSON string to object for API responses
+ */
+function parseUrls(urls: string): Record<string, string> {
+    try {
+        return urls ? JSON.parse(urls) : {};
+    } catch {
+        return {};
+    }
+}
+
+
+/**
+ * Format vendor for API response (parse URLs)
+ */
+function formatVendor(vendor: any) {
+    return {
+        ...vendor,
+        urls: parseUrls(vendor.urls || "{}"),
+    };
+}
+
+
 async function listVendors(c: Context) {
-    const users = await SgVendor.query().get();
-    return c.json(users);
+    const vendors = await SgVendor.query().get();
+    const formattedVendors = vendors.map(formatVendor);
+    return c.json(formattedVendors);
 }
 
 
@@ -24,34 +48,27 @@ async function getVendor(c: Context) {
         throw new errorHandler.NotFoundError("Vendor not found");
     }
 
-    return c.json(vendor);
+    return c.json(formatVendor(vendor));
 }
 
 
 async function createVendor(c: Context) {
     const body = await c.req.json();
-    const { type, name, token, url, api_format } = body;
+    const { type, name, token, urls } = body;
 
-    // Validation
-    if (!type || !name || !token || !url) {
+    // Validation - 不验证 urls，允许为空
+    if (!type || !name || !token) {
         throw new errorHandler.AppError("Missing required fields");
-    }
-
-    // Validate api_format
-    const validFormats = ["openai", "anthropic"];
-    if (!api_format || !validFormats.includes(api_format)) {
-        throw new errorHandler.AppError("Invalid api_format");
     }
 
     const instance = await SgVendor.query().create({
         type,
         name,
         token,
-        url,
-        api_format,
+        urls: urls ? JSON.stringify(urls) : "{}",
     });
 
-    return c.json(instance);
+    return c.json(formatVendor(instance));
 }
 
 
@@ -64,21 +81,20 @@ async function updateVendor(c: Context) {
     }
 
     const body = await c.req.json();
-    const { type, name, token, url, api_format } = body;
+    const { type, name, token, urls } = body;
 
     const updatedVendor = await vendorService.updateVendor(vendorId, {
         type,
         name,
         token,
-        url,
-        api_format,
+        urls,
     });
 
     if (!updatedVendor) {
         throw new errorHandler.NotFoundError("Vendor not found");
     }
 
-    return c.json(updatedVendor);
+    return c.json(formatVendor(updatedVendor));
 }
 
 export default {

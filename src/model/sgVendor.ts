@@ -1,16 +1,15 @@
 import { Model } from "sutando";
 import { inspect, InspectOptions } from "util";
-import { VendorType, ApiFormat } from "../constants";
+import { VendorType } from "../constants";
 
 class SgVendor extends Model {
     table = "vendor";
 
     id!: number;
     type!: VendorType;
-    api_format!: ApiFormat;
     name!: string;
     token!: string;
-    url!: string;
+    urls!: string;  // JSON string
 
     created_at!: Date;
     updated_at!: Date;

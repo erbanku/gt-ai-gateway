@@ -56,11 +56,7 @@ async function chatCompletions(c: Context) {
         return c.json({ error: "vendor not found" }, 401);
     }
 
-    if (vendor.api_format !== ApiFormat.OPENAI) {
-        return c.json({ error: "vendor api_format must be openai" }, 400);
-    }
-
-    return sender.sendRequest(c, user!, modelConfig!, vendor!);
+    return sender.sendRequest(c, user!, modelConfig!, vendor!, ApiFormat.OPENAI);
 }
 
 async function anthropicMessages(c: Context) {
@@ -116,11 +112,7 @@ async function anthropicMessages(c: Context) {
         return c.json({ error: "vendor not found" }, 401);
     }
 
-    if (vendor.api_format !== ApiFormat.ANTHROPIC) {
-        return c.json({ error: "vendor api_format must be anthropic" }, 400);
-    }
-
-    return await sender.sendRequest(c, user, modelConfig, vendor);
+    return sender.sendRequest(c, user, modelConfig, vendor, ApiFormat.ANTHROPIC);
 }
 
 export default {

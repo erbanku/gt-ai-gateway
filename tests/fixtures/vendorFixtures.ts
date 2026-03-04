@@ -14,8 +14,9 @@ const VENDOR_FIXTURES = {
             token: config.isRealMode
                 ? upstreamConfig.openai.apiKey
                 : `openai-token-${randomUUID()}`,
-            url: upstreamConfig.openai.url,
-            api_format: "openai",
+            urls: {
+                openai: upstreamConfig.openai.url,
+            },
         };
     },
     anthropic: () => {
@@ -26,30 +27,34 @@ const VENDOR_FIXTURES = {
             token: config.isRealMode
                 ? upstreamConfig.anthropic.apiKey
                 : `anthropic-token-${randomUUID()}`,
-            url: upstreamConfig.anthropic.url,
-            api_format: "anthropic",
+            urls: {
+                anthropic: upstreamConfig.anthropic.url,
+            },
         };
     },
     custom: {
         type: "other",
         name: "Custom Vendor",
         token: `custom-token-${randomUUID()}`,
-        url: "https://api.custom.com/v1/chat",
-        api_format: "openai",
+        urls: {
+            openai: "https://api.custom.com/v1/chat",
+        },
     },
     aliyun: {
         type: "aliyun",
         name: "Aliyun Vendor",
         token: `aliyun-token-${randomUUID()}`,
-        url: "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation",
-        api_format: "openai",
+        urls: {
+            openai: "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation",
+        },
     },
     deepseek: {
         type: "deepseek",
         name: "DeepSeek Vendor",
         token: `deepseek-token-${randomUUID()}`,
-        url: "https://api.deepseek.com/v1/chat/completions",
-        api_format: "openai",
+        urls: {
+            openai: "https://api.deepseek.com/v1/chat/completions",
+        },
     },
 };
 
@@ -58,16 +63,14 @@ function createRandomVendor(
         type: string;
         name: string;
         token: string;
-        url: string;
-        api_format: string;
+        urls: Record<string, string>;
     }> = {},
 ) {
     return {
         type: overrides.type || "other",
         name: overrides.name || `Test Vendor ${Date.now()}`,
         token: overrides.token || `vendor-token-${randomUUID()}`,
-        url: overrides.url || "https://api.example.com/v1/chat",
-        api_format: overrides.api_format || "openai",
+        urls: overrides.urls || { openai: "https://api.example.com/v1/chat" },
     };
 }
 
