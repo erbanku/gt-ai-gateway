@@ -182,4 +182,13 @@ async function loadData() {
     background: #fff;
     padding: 24px;
 }
+
+.dashboard :deep(.ant-descriptions-item-label) {
+    width: 120px;
+    min-width: 120px;
+}
+
+.dashboard :deep(.ant-descriptions-item-content) {
+    min-width: 150px;
+}
 </style>
