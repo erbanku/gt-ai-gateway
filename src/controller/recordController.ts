@@ -4,7 +4,10 @@ import recordService from "../service/recordService";
 
 async function listRecords(c: Context) {
     const records = await SgRecord.query().get();
-    return c.json(records);
+    return c.json({
+        list: records,
+        total: records.length,
+    });
 }
 
 async function latestRecords(c: Context) {
