@@ -77,6 +77,135 @@ data: [DONE]
 - **实时写入**：每收到一个 chunk 就立即写入文件
 - **完整格式**：保留原始的 `\n\n` 分隔符，确保与实际流格式一致
 
+## 快速开始
+
+### 1. 启用流式日志功能
+
+流式日志记录功能**默认不启用**，需要通过环境变量开启，并且仅在 node 模式下可用。
+
+#### 启用方法
+
+在启动服务前设置环境变量：
+
+```bash
+# 方式一：在命令行中设置
+TEST_MODE=node STREAM_LOG_ENABLED=true npm run backend:start:local
+
+# 方式二：在 .env 文件中设置
+echo "TEST_MODE=node" >> .env
+echo "STREAM_LOG_ENABLED=true" >> .env
+
+# 方式三：在 package.json 脚本中设置
+"backend:start:log": "TEST_MODE=node STREAM_LOG_ENABLED=true npx tsx src/local.ts"
+```
+
+**环境变量说明：**
+- `TEST_MODE=node` - 必须设置为 `node`，表示在 node 模式下运行
+- `STREAM_LOG_ENABLED=true` - 启用流式日志记录功能
+
+#### 检查是否启用
+
+启动服务后，查看控制台输出：
+
+```
+[senderService] Stream log enabled, dir: /path/to/project/log/stream
+[senderService] Stream log file path: /path/to/project/log/stream/123.log
+```
+
+如果看到上述日志，说明流式日志功能已成功启用。
+
+### 2. 启动服务
+
+```bash
+# 使用启用了日志功能的命令启动
+TEST_MODE=node STREAM_LOG_ENABLED=true npm run backend:start:local
+```
+
+服务启动后，`log/stream/` 目录会自动创建（如果不存在）。
+
+### 3. 发送流式请求
+
+使用 `curl` 或其他工具发送流式请求，系统会自动记录响应内容。
+
+#### Anthropic 格式请求
+
+```bash
+curl -X POST http://localhost:3000/api/v1/messages.json \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "your-model-name",
+    "max_tokens": 1024,
+    "stream": true,
+    "messages": [
+      {"role": "user", "content": "Hello, what is 2+2?"}
+    ]
+  }'
+```
+
+#### OpenAI 格式请求
+
+```bash
+curl -X POST http://localhost:3000/api/v1/chat/completions.json \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "model": "your-model-name",
+    "messages": [
+      {"role": "user", "content": "Hello, what is 2+2?"}
+    ],
+    "stream": true
+  }'
+```
+
+**重要提示**：请求必须设置 `stream: true` 才会触发流式响应记录。
+
+### 4. 查看日志文件
+
+请求完成后，日志文件会自动生成在 `log/stream/` 目录下：
+
+```bash
+# 查看最新生成的日志文件
+ls -lt log/stream/ | head -5
+
+# 查看特定日志文件内容
+cat log/stream/123.log
+```
+
+日志文件以数据库记录的 ID 命名（如 `123.log`）。
+
+### 5. 使用日志创建测试样本
+
+将生成的日志文件复制到测试资源目录：
+
+```bash
+# 复制日志文件到测试资源目录
+cp log/stream/123.log tests/resource/anthropic-stream.log
+
+# 或者
+cp log/stream/123.log tests/resource/openai-stream.log
+```
+
+然后在测试文件中使用：
+
+```typescript
+import { readFileSync } from "fs";
+import { join } from "path";
+
+const logFile = join(__dirname, "..", "resource", "anthropic-stream.log");
+const content = readFileSync(logFile, "utf-8");
+
+// 按 \n\n 分割 SSE 事件
+const events = content.split("\n\n");
+
+// 处理每个事件
+for (const event of events) {
+    // 解析和处理事件...
+}
+```
+
 ## 使用场景
 
 ### 1. 调试流式响应问题

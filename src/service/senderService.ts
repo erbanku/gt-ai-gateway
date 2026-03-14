@@ -23,22 +23,28 @@ async function handleStreamResponse(
     );
     let firstTokenTime: number | null = null;
 
-    // 创建流式日志目录
-    const logDir = join(process.cwd(), "log", "stream");
-    console.log('[senderService] Stream log dir:', logDir);
+    // 检查是否启用流式日志记录（仅在 node 模式下且环境变量启用时可用）
+    const isStreamLogEnabled = process.env.TEST_MODE === "node" && process.env.STREAM_LOG_ENABLED === "true";
+    let logFilePath: string | null = null;
 
-    if (!existsSync(logDir)) {
-        console.log('[senderService] Creating log dir...');
-        try {
-            mkdirSync(logDir, { recursive: true });
-        } catch (e: any) {
-            console.log('[senderService] Failed to create log dir:', e);
+    if (isStreamLogEnabled) {
+        // 创建流式日志目录
+        const logDir = join(process.cwd(), "log", "stream");
+        console.log('[senderService] Stream log enabled, dir:', logDir);
+
+        if (!existsSync(logDir)) {
+            console.log('[senderService] Creating log dir...');
+            try {
+                mkdirSync(logDir, { recursive: true });
+            } catch (e: any) {
+                console.log('[senderService] Failed to create log dir:', e);
+            }
         }
-    }
 
-    // 创建请求 ID 对应的日志文件
-    const logFilePath = join(logDir, `${record.id}.log`);
-    console.log('[senderService] Stream log file path:', logFilePath);
+        // 创建请求 ID 对应的日志文件
+        logFilePath = join(logDir, `${record.id}.log`);
+        console.log('[senderService] Stream log file path:', logFilePath);
+    }
 
     return streamSSE(c, async (stream: SSEStreamingApi) => {
         const reader = upstreamRes.body!.getReader();
@@ -53,14 +59,17 @@ async function handleStreamResponse(
 
             const chunk = decoder.decode(value, { stream: true });
 
-            // 调试：打印 chunk 内容
-            console.log('[senderService] Chunk length:', chunk.length, 'contains \\n:', chunk.includes('\n'), 'contains \\n\\n:', chunk.includes('\n\n'));
+            // 如果启用了流式日志，则写入文件
+            if (isStreamLogEnabled && logFilePath) {
+                // 调试：打印 chunk 内容
+                console.log('[senderService] Chunk length:', chunk.length, 'contains \\n:', chunk.includes('\n'), 'contains \\n\\n:', chunk.includes('\n\n'));
 
-            // 直接写入原始 chunk 到文件
-            try {
-                writeFileSync(logFilePath, chunk, { flag: "a" });
-            } catch (e: any) {
-                console.log('[senderService] Failed to write to log file:', e);
+                // 直接写入原始 chunk 到文件
+                try {
+                    writeFileSync(logFilePath, chunk, { flag: "a" });
+                } catch (e: any) {
+                    console.log('[senderService] Failed to write to log file:', e);
+                }
             }
 
             buffer += chunk;
