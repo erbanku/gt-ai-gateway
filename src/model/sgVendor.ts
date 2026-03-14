@@ -36,18 +36,28 @@ class SgVendor extends Model {
     getUrlByFormat(format: ApiFormat): string {
         const urls = this.getUrls();
 
-        // If URL exists for the format, return it
-        if (urls[format]) {
-            return urls[format];
+        // If URL exists for the format, use it
+        let url = urls[format];
+
+        if (!url) {
+            // Try to get default URL from config
+            url = vendorDefaultUrls.getDefaultUrl(this.type, format);
         }
 
-        // Try to get default URL from config
-        const defaultUrl = vendorDefaultUrls.getDefaultUrl(this.type, format);
-        if (defaultUrl) {
-            return defaultUrl;
+        if (!url) {
+            throw new customError.AppError(`vendor does not have url for ${format} format`, 400);
         }
 
-        throw new customError.AppError(`vendor does not have url for ${format} format`, 400);
+        // Normalize URL - Add missing paths if not present
+        if (format === ApiFormat.ANTHROPIC && !url.includes("/v1/messages")) {
+            url = url.replace(/\/$/, "") + "/v1/messages";
+        }
+        
+        if (format === ApiFormat.OPENAI && !url.includes("/chat/completions")) {
+            url = url.replace(/\/$/, "") + "/chat/completions";
+        }
+
+        return url;
     }
 
     [inspect.custom](depth: number, options: InspectOptions) {

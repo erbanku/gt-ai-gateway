@@ -140,13 +140,7 @@ async function sendRequest(
     format: ApiFormat,
     body: string,
 ): Promise<Response> {
-    let url = vendor.getUrlByFormat(format);
-
-    // Anthropic 特殊处理：如果 URL 不以 /v1/messages 结尾，自动补全
-    if (format === ApiFormat.ANTHROPIC && !url.endsWith("/v1/messages")) {
-        // 去掉末尾可能存在的斜杠后再拼接
-        url = url.replace(/\/$/, "") + "/v1/messages";
-    }
+    const url = vendor.getUrlByFormat(format);
 
     // 1. 创建数据库记录
     const record = await recordService.create(user.id, modelConfig.id, body);
