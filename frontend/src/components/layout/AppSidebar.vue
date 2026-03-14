@@ -34,20 +34,25 @@
             </a-menu>
         </div>
         <div class="sidebar-footer">
-            <a-button
-                type="text"
-                @click="toggleSidebar"
-                class="collapse-btn"
-            >
-                <MenuFoldOutlined v-if="!collapsed" />
-                <MenuUnfoldOutlined v-else />
-            </a-button>
+            <div class="footer-left">
+                <a-button
+                    type="text"
+                    @click="toggleSidebar"
+                    class="collapse-btn"
+                >
+                    <MenuFoldOutlined v-if="!collapsed" />
+                    <MenuUnfoldOutlined v-else />
+                </a-button>
+            </div>
+            <div v-if="!collapsed" class="footer-right">
+                <span class="version-text">v{{ version }}</span>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { DashboardOutlined, UserOutlined, ApiOutlined, SettingOutlined, FileTextOutlined, ExperimentOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons-vue';
 import { useAppStore } from '@/stores/app';
@@ -57,6 +62,7 @@ const route = useRoute();
 const appStore = useAppStore();
 
 const collapsed = computed(() => appStore.sidebarCollapsed);
+const version = computed(() => appStore.version);
 
 const selectedKeys = computed(() => {
     const path = route.path;
@@ -66,6 +72,12 @@ const selectedKeys = computed(() => {
     if (path.startsWith('/record')) return ['/record'];
     if (path.startsWith('/api-test')) return ['/api-test'];
     return [path];
+});
+
+onMounted(() => {
+    if (!appStore.version) {
+        appStore.fetchVersion();
+    }
 });
 
 function handleSelect({ key }: { key: string }) {
@@ -100,10 +112,35 @@ function toggleSidebar() {
 }
 
 .sidebar-footer {
-    padding: 16px;
+    padding: 12px 16px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.footer-left {
+    flex-shrink: 0;
+}
+
+.footer-right {
+    flex: 1;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    line-height: 1;
 }
 
 .collapse-btn {
     font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.version-text {
+    font-size: 14px;
+    color: #bfbfbf;
 }
 </style>
