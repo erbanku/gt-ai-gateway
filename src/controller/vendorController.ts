@@ -152,14 +152,11 @@ async function testVendor(c: Context) {
     const bodyJson = await c.req.json().catch(() => ({}));
     const { format = ApiFormat.OPENAI, model = "test-ping" } = bodyJson;
     
-    let url = vendor.getUrlByFormat(format);
+    const url = vendor.getUrlByFormat(format);
     const headers = new Headers();
     let upstreamBody = "";
 
     if (format === ApiFormat.ANTHROPIC) {
-        if (!url.endsWith("/v1/messages")) {
-            url = url.replace(/\/$/, "") + "/v1/messages";
-        }
         headers.set("x-api-key", vendor.token);
         headers.set("anthropic-version", "2023-06-01");
         headers.set("Content-Type", "application/json");
@@ -200,6 +197,7 @@ async function testVendor(c: Context) {
             success: response.ok,
             status: response.status,
             duration,
+            url,
             response: responseData,
         });
     } catch (error: any) {

@@ -50,17 +50,23 @@
             <div v-if="result" class="test-result">
                 <a-divider>测试结果</a-divider>
                 <div class="result-summary">
-                    <a-space>
-                        <a-badge :status="result.success ? 'success' : 'error'" />
-                        <span :class="['status-text', result.success ? 'success' : 'error']">
-                            {{ result.success ? '连接成功' : '连接失败' }}
-                        </span>
-                        <span v-if="result.status" class="status-code">
-                            HTTP {{ result.status }}
-                        </span>
-                        <span v-if="result.duration" class="duration">
-                            耗时: {{ result.duration }}ms
-                        </span>
+                    <a-space direction="vertical" style="width: 100%">
+                        <a-space>
+                            <a-badge :status="result.success ? 'success' : 'error'" />
+                            <span :class="['status-text', result.success ? 'success' : 'error']">
+                                {{ result.success ? '连接成功' : '连接失败' }}
+                            </span>
+                            <span v-if="result.status" class="status-code">
+                                HTTP {{ result.status }}
+                            </span>
+                            <span v-if="result.duration" class="duration">
+                                耗时: {{ result.duration }}ms
+                            </span>
+                        </a-space>
+                        <div v-if="result.url" class="result-url">
+                            <span class="url-label">实际 URL:</span>
+                            <code class="url-text">{{ result.url }}</code>
+                        </div>
                     </a-space>
                 </div>
 
@@ -233,6 +239,26 @@ defineExpose({ open });
     color: #8c8c8c;
     font-size: 13px;
     margin-left: 8px;
+}
+
+.result-url {
+    margin-top: 8px;
+    font-size: 12px;
+    word-break: break-all;
+    background: #f0f2f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.url-label {
+    color: #8c8c8c;
+    margin-right: 8px;
+    font-weight: 500;
+}
+
+.url-text {
+    color: #595959;
+    font-family: monospace;
 }
 
 .result-detail {
