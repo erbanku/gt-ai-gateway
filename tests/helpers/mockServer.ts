@@ -382,13 +382,13 @@ function handleAnthropicStreamResponse(res: ServerResponse, data: any): void {
     });
 
     const chunks = [
-        { type: "content_block_delta", delta: { text: "Hello!" } },
-        { type: "content_block_delta", delta: { text: " I am" } },
-        { type: "content_block_delta", delta: { text: " a mock" } },
-        { type: "content_block_delta", delta: { text: " Claude assistant." } },
+        { type: "text_delta", text: "Hello!" },
+        { type: "text_delta", text: " I am" },
+        { type: "text_delta", text: " a mock" },
+        { type: "text_delta", text: " Claude assistant." },
         {
-            type: "content_block_delta",
-            delta: { text: " How can I help you?" },
+            type: "text_delta",
+            text: " How can I help you?",
         },
     ];
 
@@ -426,7 +426,7 @@ function handleAnthropicStreamResponse(res: ServerResponse, data: any): void {
         const chunkEvent = {
             type: "content_block_delta",
             index: 0,
-            delta: chunks[i].delta,
+            delta: chunks[i],
         };
         res.write(
             `event: content_block_delta\ndata: ${JSON.stringify(chunkEvent)}\n\n`,

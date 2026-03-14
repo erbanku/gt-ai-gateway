@@ -35,9 +35,11 @@ interface AnthropicSSEMessage {
         content?: any[];
         model?: string;
         stop_reason?: string | null;
+        stop_sequence?: string | null;
         usage?: {
             input_tokens?: number;
             output_tokens?: number;
+            cache_read_input_tokens?: number;
         };
     };
     usage?: {
@@ -45,7 +47,12 @@ interface AnthropicSSEMessage {
         output_tokens?: number;
     };
     delta?: {
+        type?: 'text_delta' | 'thinking_delta' | 'signature_delta';
         text?: string;
+        thinking?: string;
+        signature?: string;
+        stop_reason?: string | null;
+        stop_sequence?: string | null;
     };
     index?: number;
 }
@@ -60,6 +67,8 @@ interface AccumulatedResponse {
         message: {
             role?: string;
             content: string;
+            thinking?: string;
+            signature?: string;
         };
         finish_reason: string | null;
     }>;
@@ -75,7 +84,7 @@ type SSEFormat = 'openai' | 'anthropic';
 class SSEAccumulator {
     private format: SSEFormat;
     private response: AccumulatedResponse = {
-        choices: [{ index: 0, message: { content: "" }, finish_reason: null }],
+        choices: [{ index: 0, message: { content: "", thinking: "", signature: "" }, finish_reason: null }],
     };
 
     constructor(format: SSEFormat = 'openai') {
@@ -114,7 +123,7 @@ class SSEAccumulator {
                 while (this.response.choices.length <= index) {
                     this.response.choices.push({
                         index: this.response.choices.length,
-                        message: { content: "" },
+                        message: { content: "", thinking: "", signature: "" },
                         finish_reason: null,
                     });
                 }
@@ -148,31 +157,73 @@ class SSEAccumulator {
     /**
      * 处理 Anthropic 格式的消息
      * @param msg - SSE 消息对象
-     * @param eventType - SSE 事件类型（message_start, content_block_delta, message_stop 等）
+     * @param eventType - SSE 事件类型（message_start, content_block_delta, message_delta, message_stop 等）
+     *
+     * 事件处理逻辑：
+     * - message_start: 保存 id, model, role, 初始 usage
+     * - content_block_delta: 根据 delta.type 处理
+     *   - thinking_delta → message.thinking += delta.thinking
+     *   - signature_delta → message.signature = delta.signature
+     *   - text_delta → message.content += delta.text
+     * - message_delta: 更新 stop_reason (在 delta 中) 和最终 usage
+     * - message_stop: 响应结束（无需处理）
      */
     private handleAnthropicMessage(msg: AnthropicSSEMessage, eventType?: string): void {
-        // 保存基本信息
-        if (msg.message?.id) this.response.id = msg.message.id;
-        if (msg.message?.model) this.response.model = msg.message.model;
-        if (msg.message?.role) this.response.choices[0].message.role = msg.message.role;
-        if (msg.message?.stop_reason !== undefined) {
-            this.response.choices[0].finish_reason = msg.message.stop_reason;
+        // message_start 事件：保存基本信息
+        if (eventType === 'message_start' && msg.message) {
+            if (msg.message.id) this.response.id = msg.message.id;
+            if (msg.message.model) this.response.model = msg.message.model;
+            if (msg.message.role) this.response.choices[0].message.role = msg.message.role;
+
+            // 初始化 usage（input_tokens 在这里提供）
+            if (msg.message.usage) {
+                this.response.usage = {
+                    prompt_tokens: msg.message.usage.input_tokens,
+                    completion_tokens: msg.message.usage.output_tokens || 0,
+                    total_tokens: (msg.message.usage.input_tokens || 0) + (msg.message.usage.output_tokens || 0),
+                };
+            }
+            return;
         }
 
-        // Handle usage from message_start or message_stop events
-        if (msg.message?.usage || msg.usage) {
-            const usage = msg.usage || msg.message?.usage;
-            this.response.usage = {
-                prompt_tokens: usage.input_tokens,
-                completion_tokens: usage.output_tokens,
-                total_tokens: (usage.input_tokens || 0) + (usage.output_tokens || 0),
-            };
+        // content_block_delta 事件：累积内容增量
+        if (eventType === 'content_block_delta' && msg.delta) {
+            const deltaType = msg.delta.type;
+
+            // 根据 delta.type 区分处理
+            if (deltaType === 'thinking_delta' && msg.delta.thinking) {
+                // 累积 thinking 内容到 choices[0].message.thinking
+                if (this.response.choices[0].message.thinking === undefined) {
+                    this.response.choices[0].message.thinking = "";
+                }
+                this.response.choices[0].message.thinking += msg.delta.thinking;
+            } else if (deltaType === 'signature_delta' && msg.delta.signature) {
+                // 保存 thinking 签名（必需，用于工具调用）
+                this.response.choices[0].message.signature = msg.delta.signature;
+            } else if (deltaType === 'text_delta' && msg.delta.text) {
+                // 累积 text 内容到 choices[0].message.content
+                this.response.choices[0].message.content += msg.delta.text;
+            }
+            return;
         }
 
-        // 根据 event 类型处理文本内容
-        // content_block_delta 事件中包含 delta 对象
-        if (eventType === 'content_block_delta' && msg.delta?.text) {
-            this.response.choices[0].message.content += msg.delta.text;
+        // message_delta 事件：更新 stop_reason 和最终 usage
+        if (eventType === 'message_delta') {
+            // stop_reason 在 delta 对象中
+            if (msg.delta?.stop_reason !== undefined) {
+                this.response.choices[0].finish_reason = msg.delta.stop_reason;
+            }
+
+            // 更新最终的 usage（output_tokens 在这里最终确定）
+            if (msg.message?.usage || msg.usage) {
+                const usage = msg.usage || msg.message?.usage;
+                this.response.usage = {
+                    prompt_tokens: usage.input_tokens || this.response.usage?.prompt_tokens,
+                    completion_tokens: usage.output_tokens,
+                    total_tokens: (usage.input_tokens || 0) + (usage.output_tokens || 0),
+                };
+            }
+            return;
         }
     }
 
@@ -198,7 +249,7 @@ class SSEAccumulator {
     reset(): void {
         this.response = {
             choices: [
-                { index: 0, message: { content: "" }, finish_reason: null },
+                { index: 0, message: { content: "", thinking: "", signature: "" }, finish_reason: null },
             ],
         };
     }

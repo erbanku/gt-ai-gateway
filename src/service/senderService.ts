@@ -8,6 +8,8 @@ import recordService from "./recordService";
 import { SgRecordStatus, ApiFormat } from "../constants";
 import sseAccumulator from "../util/sseAccumulator";
 import { SgRecord } from "../model/sgRecord";
+import { mkdirSync, writeFileSync, existsSync } from "fs";
+import { join } from "path";
 
 
 async function handleStreamResponse(
@@ -21,16 +23,47 @@ async function handleStreamResponse(
     );
     let firstTokenTime: number | null = null;
 
+    // 创建流式日志目录
+    const logDir = join(process.cwd(), "log", "stream");
+    console.log('[senderService] Stream log dir:', logDir);
+
+    if (!existsSync(logDir)) {
+        console.log('[senderService] Creating log dir...');
+        try {
+            mkdirSync(logDir, { recursive: true });
+        } catch (e: any) {
+            console.log('[senderService] Failed to create log dir:', e);
+        }
+    }
+
+    // 创建请求 ID 对应的日志文件
+    const logFilePath = join(logDir, `${record.id}.log`);
+    console.log('[senderService] Stream log file path:', logFilePath);
+
     return streamSSE(c, async (stream: SSEStreamingApi) => {
         const reader = upstreamRes.body!.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        let eventCount = 0;
 
         // 逐块读取上游 SSE 字节流
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            buffer += decoder.decode(value, { stream: true });
+
+            const chunk = decoder.decode(value, { stream: true });
+
+            // 调试：打印 chunk 内容
+            console.log('[senderService] Chunk length:', chunk.length, 'contains \\n:', chunk.includes('\n'), 'contains \\n\\n:', chunk.includes('\n\n'));
+
+            // 直接写入原始 chunk 到文件
+            try {
+                writeFileSync(logFilePath, chunk, { flag: "a" });
+            } catch (e: any) {
+                console.log('[senderService] Failed to write to log file:', e);
+            }
+
+            buffer += chunk;
 
             // 按 \n\n 切割出完整的 SSE event
             const events = buffer.split("\n\n");
@@ -39,6 +72,8 @@ async function handleStreamResponse(
 
             for (const event of events) {
                 if (!event.trim()) continue;
+
+                eventCount++;
 
                 // 解析 SSE event 中的各字段行（data / event / id / retry）
                 const lines = event.split("\n");
@@ -77,6 +112,8 @@ async function handleStreamResponse(
                 }
             }
         }
+
+        console.log(`[senderService] Stream ended, total events: ${eventCount}`);
 
         // 流结束，保存完整响应到数据库
         const fullResponse = accumulator.getResponse();
