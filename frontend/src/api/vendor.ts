@@ -25,6 +25,6 @@ export async function deleteVendor(id: number): Promise<{ success: boolean }> {
     return request.delete(`/vendor/${id}`);
 }
 
-export async function testVendor(id: number, format: string = 'openai'): Promise<any> {
-    return request.post(`/vendor/${id}/test.json`, { format });
+export async function testVendor(id: number, format: string = 'openai', model?: string): Promise<any> {
+    return request.post(`/vendor/${id}/test.json`, { format, model });
 }

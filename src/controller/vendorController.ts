@@ -149,11 +149,12 @@ async function testVendor(c: Context) {
         throw new customError.NotFoundError("Vendor not found");
     }
 
-    const { format = ApiFormat.OPENAI } = await c.req.json().catch(() => ({}));
+    const bodyJson = await c.req.json().catch(() => ({}));
+    const { format = ApiFormat.OPENAI, model = "test-ping" } = bodyJson;
     
     let url = vendor.getUrlByFormat(format);
     const headers = new Headers();
-    let body = "";
+    let upstreamBody = "";
 
     if (format === ApiFormat.ANTHROPIC) {
         if (!url.endsWith("/v1/messages")) {
@@ -162,8 +163,8 @@ async function testVendor(c: Context) {
         headers.set("x-api-key", vendor.token);
         headers.set("anthropic-version", "2023-06-01");
         headers.set("Content-Type", "application/json");
-        body = JSON.stringify({
-            model: "any-model", // Upstream might validate this, but for "ping" it might just return 401/404
+        upstreamBody = JSON.stringify({
+            model: model,
             messages: [{ role: "user", content: "ping" }],
             max_tokens: 1,
         });
@@ -171,20 +172,20 @@ async function testVendor(c: Context) {
         // OpenAI format
         headers.set("Authorization", vendor.token.startsWith("Bearer ") ? vendor.token : `Bearer ${vendor.token}`);
         headers.set("Content-Type", "application/json");
-        body = JSON.stringify({
-            model: "any-model",
+        upstreamBody = JSON.stringify({
+            model: model,
             messages: [{ role: "user", content: "ping" }],
             max_tokens: 1,
         });
     }
 
     try {
-        console.log(`[testVendor] Testing vendor ${vendor.name} (${vendor.id}) at ${url}`);
+        console.log(`[testVendor] Testing vendor ${vendor.name} (${vendor.id}) with model ${model} at ${url}`);
         const startTime = Date.now();
         const response = await fetch(url, {
             method: "POST",
             headers,
-            body,
+            body: upstreamBody,
         });
         const duration = Date.now() - startTime;
         const responseText = await response.text();

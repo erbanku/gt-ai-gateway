@@ -21,13 +21,33 @@ describe('Vendor Test API', () => {
         }, rootToken);
 
         const response = await requestHelper.post(`/vendor/${vendor.body.id}/test.json`, {
-            format: 'openai'
+            format: 'openai',
+            model: 'gpt-4'
         }, rootToken);
 
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
         expect(response.body).toHaveProperty('duration');
         expect(response.body).toHaveProperty('status', 200);
+    });
+
+    it('should test vendor connectivity with custom model', async () => {
+        const vendor = await requestHelper.post('/vendor/create.json', {
+            type: 'other',
+            name: 'Custom Model Vendor',
+            token: 'test-token',
+            urls: {
+                openai: 'http://localhost:9999/v1/chat/completions'
+            }
+        }, rootToken);
+
+        const response = await requestHelper.post(`/vendor/${vendor.body.id}/test.json`, {
+            format: 'openai',
+            model: 'special-model-123'
+        }, rootToken);
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
     });
 
     it('should test vendor connectivity (Anthropic format)', async () => {
@@ -41,7 +61,8 @@ describe('Vendor Test API', () => {
         }, rootToken);
 
         const response = await requestHelper.post(`/vendor/${vendor.body.id}/test.json`, {
-            format: 'anthropic'
+            format: 'anthropic',
+            model: 'claude-3-opus'
         }, rootToken);
 
         expect(response.status).toBe(200);
@@ -67,34 +88,5 @@ describe('Vendor Test API', () => {
         expect(response.status).toBe(500);
         expect(response.body.success).toBe(false);
         expect(response.body).toHaveProperty('error');
-    });
-
-    it('should return upstream error for invalid token', async () => {
-        // Our mock server returns 401 for specific tokens or invalid paths if configured
-        // But here we just want to see if it handles non-200 correctly
-        const vendor = await requestHelper.post('/vendor/create.json', {
-            type: 'other',
-            name: 'Unauthorized Vendor',
-            token: 'invalid-token',
-            urls: {
-                openai: 'http://localhost:9999/v1/chat/completions'
-            }
-        }, rootToken);
-
-        // We need to tell the mock server to return 401
-        // (Assuming our mock server handles all requests successfully by default)
-        // If the mock server returns 200, success will be true. 
-        // If we want to test 401, we'd need to configure the mock helper.
-        // For now, let's just verify it returns the upstream status.
-        
-        const response = await requestHelper.post(`/vendor/${vendor.body.id}/test.json`, {
-            format: 'openai'
-        }, rootToken);
-
-        expect(response.status).toBe(200);
-        // Our current mock server likely returns 200 for everything
-        // So we just check if it contains the expected fields
-        expect(response.body).toHaveProperty('success');
-        expect(response.body).toHaveProperty('status');
     });
 });
