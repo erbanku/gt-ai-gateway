@@ -30,6 +30,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    background: var(--bg-layout);
 }
 
 .layout-body {

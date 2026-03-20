@@ -79,7 +79,7 @@ function handleClear() {
 
 <style scoped>
 .stream-output {
-    border: 1px solid #e1e4e8;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     overflow: hidden;
     display: flex;
@@ -89,8 +89,8 @@ function handleClear() {
 
 .stream-header {
     padding: 12px 16px;
-    background: #f6f8fa;
-    border-bottom: 1px solid #e1e4e8;
+    background: var(--bg-code-header);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -105,7 +105,7 @@ function handleClear() {
     flex: 1;
     padding: 16px;
     overflow: auto;
-    background: #fff;
+    background: var(--bg-code);
 }
 
 .stream-text {
@@ -113,7 +113,7 @@ function handleClear() {
     word-wrap: break-word;
     line-height: 1.6;
     font-size: 14px;
-    color: #24292e;
+    color: var(--text-primary);
 }
 
 .stream-error {
@@ -141,7 +141,7 @@ function handleClear() {
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: #8c8c8c;
+    color: var(--text-secondary);
     gap: 8px;
 }
 

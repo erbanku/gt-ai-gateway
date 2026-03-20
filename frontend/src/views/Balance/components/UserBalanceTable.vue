@@ -34,7 +34,11 @@
                 <template v-if="column.key === 'type'">
                     <a-tag
                         :style="record.type === 'admin'
-                            ? undefined
+                            ? {
+                                color: 'var(--accent-danger)',
+                                backgroundColor: 'var(--accent-danger-soft)',
+                                borderColor: 'var(--accent-danger-border)',
+                            }
                             : {
                                 color: 'var(--accent-primary)',
                                 backgroundColor: 'var(--accent-primary-soft)',
