@@ -103,8 +103,8 @@ function toggleSidebar() {
 .app-sidebar {
     width: 232px;
     height: 100%;
-    background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
-    border-right: 1px solid #e8edf5;
+    background: var(--bg-sidebar-gradient);
+    border-right: 1px solid var(--border-color);
     transition: all 0.3s;
     display: flex;
     flex-direction: column;
@@ -150,13 +150,13 @@ function toggleSidebar() {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #4f5d75;
-    background: #f4f7fb;
+    color: var(--collapse-btn-text);
+    background: var(--collapse-btn-bg);
 }
 
 .version-text {
     font-size: 14px;
-    color: #95a1b2;
+    color: var(--text-version);
     font-weight: 600;
 }
 
@@ -174,7 +174,7 @@ function toggleSidebar() {
     width: 100%;
     box-sizing: border-box;
     border-radius: 14px;
-    color: #243247;
+    color: var(--text-sidebar);
     font-size: 16px;
     font-weight: 500;
     transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
@@ -196,7 +196,7 @@ function toggleSidebar() {
     min-width: 20px;
     font-size: 18px;
     line-height: 1;
-    color: #5b6b83;
+    color: var(--text-sidebar-icon);
     vertical-align: middle;
 }
 
@@ -205,22 +205,21 @@ function toggleSidebar() {
 }
 
 .app-sidebar :deep(.ant-menu-item:hover) {
-    background: #f4f8ff;
-    color: #1677ff;
+    background: var(--sidebar-hover);
+    color: var(--sidebar-hover-text);
 }
 
 .app-sidebar :deep(.ant-menu-item:hover .anticon) {
-    color: #1677ff;
+    color: var(--sidebar-hover-text);
 }
 
 .app-sidebar :deep(.ant-menu-item-selected) {
-    background: #e8f2ff;
-    color: #1677ff;
-    box-shadow: inset 0 0 0 1px rgba(22, 119, 255, 0.08);
+    background: var(--sidebar-selected);
+    color: var(--sidebar-selected-text);
 }
 
 .app-sidebar :deep(.ant-menu-item-selected .anticon) {
-    color: #1677ff;
+    color: var(--sidebar-selected-text);
 }
 
 .app-sidebar.collapsed :deep(.ant-menu-item) {

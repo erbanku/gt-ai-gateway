@@ -61,16 +61,16 @@ async function handleCopy() {
 
 <style scoped>
 .json-viewer {
-    background: #f6f8fa;
-    border: 1px solid #e1e4e8;
+    background: var(--bg-code);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     overflow: hidden;
 }
 
 .json-header {
     padding: 8px 12px;
-    background: #fff;
-    border-bottom: 1px solid #e1e4e8;
+    background: var(--bg-code-header);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
 }
@@ -91,7 +91,7 @@ async function handleCopy() {
     font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
     font-size: 12px;
     line-height: 1.5;
-    color: #24292e;
+    color: var(--text-primary);
     white-space: pre-wrap;
     word-wrap: break-word;
 }
@@ -99,6 +99,6 @@ async function handleCopy() {
 .empty {
     padding: 24px;
     text-align: center;
-    color: #8c8c8c;
+    color: var(--text-secondary);
 }
 </style>

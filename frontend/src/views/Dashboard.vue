@@ -3,12 +3,13 @@
         <!-- 统计卡片区域 -->
         <div class="stats-header">
             <h2 class="section-title">今日统计</h2>
-            <a-space>
+            <a-space class="stats-toolbar" :size="10">
                 <span v-if="lastUpdated" class="last-updated">
                     最后更新: {{ formatTime(lastUpdated) }}
                 </span>
                 <a-tooltip title="自动刷新">
                     <a-switch
+                        class="toolbar-switch"
                         v-model:checked="autoRefreshEnabled"
                         checked-children="开"
                         un-checked-children="关"
@@ -362,6 +363,28 @@ function formatTime(date: Date): string {
 .last-updated {
     font-size: 12px;
     color: var(--text-secondary);
+}
+
+.stats-toolbar {
+    display: inline-flex;
+    align-items: center;
+}
+
+.stats-toolbar :deep(.ant-space-item) {
+    display: flex;
+    align-items: center;
+}
+
+.stats-toolbar :deep(.ant-switch) {
+    background: var(--toolbar-switch-off);
+}
+
+.stats-toolbar :deep(.ant-switch .ant-switch-handle::before) {
+    background: var(--toolbar-switch-handle);
+}
+
+.stats-toolbar :deep(.ant-switch.ant-switch-checked) {
+    background: var(--accent-primary);
 }
 
 .recent-records-card {

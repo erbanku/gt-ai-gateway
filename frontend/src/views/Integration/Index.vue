@@ -160,6 +160,8 @@ async function copyText(text: string, label: string) {
 .integration {
     padding: 24px;
     max-width: 900px;
+    background: var(--bg-page);
+    min-height: 100%;
 }
 
 .page-header {
@@ -201,13 +203,15 @@ async function copyText(text: string, label: string) {
 }
 
 .protocol-badge.openai {
-    background: #e6f4ff;
+    background: var(--accent-primary-soft);
     color: var(--accent-primary);
+    border: 1px solid var(--accent-primary-border);
 }
 
 .protocol-badge.anthropic {
-    background: #fff7e6;
-    color: #d46b08;
+    background: var(--accent-warning-soft);
+    color: var(--accent-warning);
+    border: 1px solid var(--accent-warning-border);
 }
 
 .url-row {
@@ -234,7 +238,7 @@ async function copyText(text: string, label: string) {
 }
 
 .code-block {
-    background: #f6f8fa;
+    background: var(--bg-code);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 14px 16px;
@@ -244,7 +248,7 @@ async function copyText(text: string, label: string) {
     white-space: pre;
     overflow-x: auto;
     margin: 0;
-    color: #24292e;
+    color: var(--text-primary);
 }
 
 .notes-card {

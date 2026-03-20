@@ -5,6 +5,9 @@
             <span class="title">{{ title }}</span>
         </div>
         <div class="header-right">
+            <a-button type="text" class="theme-btn" @click="toggleTheme">
+                <component :is="themeStore.isDark ? SunIcon : MoonIcon" />
+            </a-button>
             <a-dropdown>
                 <a-button type="text" class="user-btn">
                     <UserOutlined />
@@ -24,23 +27,77 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, h } from 'vue';
 import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue/es';
-import { UserOutlined, LogoutOutlined } from '@ant-design/icons-vue';
+import {
+    UserOutlined,
+    LogoutOutlined,
+} from '@ant-design/icons-vue';
 import { useAuthStore } from '@/stores/auth';
+import { useThemeStore } from '@/stores/theme';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const themeStore = useThemeStore();
 
-const title = computed(() => {
-    return 'AI Gateway';
-});
+const iconProps = {
+    viewBox: '0 0 24 24',
+    width: '1em',
+    height: '1em',
+    fill: 'none',
+    stroke: 'currentColor',
+    'stroke-width': '2.2',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
+    'aria-hidden': 'true',
+};
+
+const SunIcon = {
+    render() {
+        return h(
+            'svg',
+            iconProps,
+            [
+                h('circle', { cx: '12', cy: '12', r: '4' }),
+                h('path', { d: 'M12 2.5v2.2' }),
+                h('path', { d: 'M12 19.3v2.2' }),
+                h('path', { d: 'M4.93 4.93l1.56 1.56' }),
+                h('path', { d: 'M17.51 17.51l1.56 1.56' }),
+                h('path', { d: 'M2.5 12h2.2' }),
+                h('path', { d: 'M19.3 12h2.2' }),
+                h('path', { d: 'M4.93 19.07l1.56-1.56' }),
+                h('path', { d: 'M17.51 6.49l1.56-1.56' }),
+            ],
+        );
+    },
+};
+
+const MoonIcon = {
+    render() {
+        return h(
+            'svg',
+            iconProps,
+            [
+                h('path', {
+                    d: 'M20 14.2A8 8 0 0 1 9.8 4 8.6 8.6 0 1 0 20 14.2z',
+                }),
+            ],
+        );
+    },
+};
+
+const title = computed(() => 'AI Gateway');
 
 function handleLogout() {
     authStore.logout();
     message.success('已退出登录');
     router.push('/login');
+}
+
+function toggleTheme() {
+    themeStore.toggleTheme();
+    message.success(`已切换为${themeStore.isDark ? '浅色' : '深色'}模式`);
 }
 </script>
 
@@ -51,7 +108,7 @@ function handleLogout() {
     align-items: center;
     padding: 0 24px;
     height: 64px;
-    background: #fff;
+    background: var(--bg-header);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     position: relative;
     z-index: 20;
@@ -72,11 +129,27 @@ function handleLogout() {
 .title {
     font-size: 18px;
     font-weight: 600;
+    color: var(--text-primary);
 }
 
 .header-right {
     display: flex;
     align-items: center;
+    gap: 8px;
+}
+
+.theme-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+}
+
+.theme-btn :deep(svg) {
+    width: 24px;
+    height: 24px;
 }
 
 .user-btn {
@@ -87,5 +160,6 @@ function handleLogout() {
 
 .username {
     font-size: 14px;
+    color: var(--text-primary);
 }
 </style>

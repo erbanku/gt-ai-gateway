@@ -3,7 +3,7 @@ import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { message } from 'ant-design-vue/es';
 
 const instance: AxiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || '',
+    baseURL: import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '/api' : ''),
     timeout: 30000,
     headers: {
         'Content-Type': 'application/json',

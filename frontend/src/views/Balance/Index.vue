@@ -35,7 +35,7 @@ function handleAdjustSuccess() {
 
 <style scoped>
 .balance-page {
-    background: #fff;
+    background: var(--bg-page);
     padding: 24px;
     min-height: calc(100vh - 64px);
 }

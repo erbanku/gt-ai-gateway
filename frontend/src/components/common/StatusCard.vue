@@ -1,5 +1,5 @@
 <template>
-    <a-card :loading="loading" hoverable class="status-card">
+    <a-card :loading="loading" class="status-card">
         <template #title>
             <span>{{ title }}</span>
         </template>

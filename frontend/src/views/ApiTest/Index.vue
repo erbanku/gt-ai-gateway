@@ -278,7 +278,7 @@ function getStatusText(status: string): string {
 .api-test {
     height: 100%;
     padding: 24px;
-    background: #fff;
+    background: var(--bg-page);
 }
 
 .test-container {
@@ -312,7 +312,7 @@ function getStatusText(status: string): string {
 
 .slider-value {
     text-align: center;
-    color: #8c8c8c;
+    color: var(--text-secondary);
     font-size: 12px;
 }
 

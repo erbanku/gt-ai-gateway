@@ -184,7 +184,7 @@ function handleAutoRefreshChange(checked: boolean) {
 
 <style scoped>
 .record-list {
-    background: #fff;
+    background: var(--bg-page);
     padding: 24px;
 }
 
@@ -219,6 +219,6 @@ function handleAutoRefreshChange(checked: boolean) {
 
 .refresh-hint {
     font-size: 12px;
-    color: #8c8c8c;
+    color: var(--text-secondary);
 }
 </style>
