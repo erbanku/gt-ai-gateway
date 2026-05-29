@@ -5,9 +5,10 @@ import App from './App.vue';
 import router from './router';
 import './style.css';
 import { setBaseURL } from './utils/request';
+import { setAuthToken } from './utils/authSession';
 
 async function bootstrap() {
-    // 在 Tauri 打包环境下，运行时从 Rust 侧获取实际后端地址（支持自定义端口/host）
+    // 在 Tauri 打包环境下，运行时从 Rust 侧获取实际后端地址和 auth token
     if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
         try {
             const { invoke } = await import('@tauri-apps/api/core');
@@ -15,8 +16,13 @@ async function bootstrap() {
             if (url) {
                 setBaseURL(url);
             }
+            // Desktop 模式自动登录：从 Rust 侧获取 root token 并写入本地存储
+            const token = await invoke<string>('get_auth_token');
+            if (token) {
+                setAuthToken(token);
+            }
         } catch (e) {
-            console.warn('[tauri] Failed to get backend url, using default.', e);
+            alert(`Application initialization failed: ${e}`);
         }
     }
 
