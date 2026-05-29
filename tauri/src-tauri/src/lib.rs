@@ -17,6 +17,9 @@ const DEFAULT_HOST: &str = "127.0.0.1";
 /// 存储后端实际使用的 URL，供前端通过 Tauri 命令查询
 struct BackendUrl(String);
 
+/// 存储 root token，供前端自动登录
+struct AuthToken(String);
+
 /// 持有 PTY master fd（OwnedFd）。
 /// Tauri 进程退出时（包括 kill -9），OwnedFd 被 drop，OS 关闭 master fd，
 /// 内核向 backend 进程组发送 SIGHUP，backend 自动退出，不留孤儿进程。
@@ -29,55 +32,79 @@ fn get_backend_url(state: tauri::State<BackendUrl>) -> String {
     state.0.clone()
 }
 
+/// Tauri 命令：返回 root token，供前端自动登录
+#[tauri::command]
+fn get_auth_token(state: tauri::State<AuthToken>) -> String {
+    state.0.clone()
+}
+
 struct AppConfig {
     port: u16,
     host: String,
     root_token: String,
 }
 
+/// 生成随机 token（32 字符 hex）
+fn generate_random_token() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let seed = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    format!("{:032x}", seed ^ (seed >> 64))
+}
+
 /// 从 app_data_dir/config.json 读取配置。
-/// 若文件不存在，自动创建一份含默认值的配置文件。
+/// 若文件不存在或缺少 root_token，自动生成并写入。
 fn read_config(app_data_dir: &Path) -> AppConfig {
     let config_path = app_data_dir.join("config.json");
 
-    if !config_path.exists() {
-        let default_config = serde_json::json!({
-            "port": DEFAULT_PORT,
-            "host": DEFAULT_HOST
-        });
-        let _ = fs::write(
-            &config_path,
-            serde_json::to_string_pretty(&default_config).unwrap(),
-        );
-        return AppConfig {
-            port: DEFAULT_PORT,
-            host: DEFAULT_HOST.to_string(),
-            root_token: std::env::var("ROOT_TOKEN").unwrap_or_default(),
-        };
-    }
-
     let mut port = DEFAULT_PORT;
     let mut host = DEFAULT_HOST.to_string();
-    let mut root_token = std::env::var("ROOT_TOKEN").unwrap_or_default();
+    let mut root_token = String::new();
+    let mut need_write = false;
 
-    if let Ok(content) = fs::read_to_string(&config_path) {
-        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) {
-            if let Some(p) = json["port"].as_u64() {
-                if p > 0 && p <= 65535 {
-                    port = p as u16;
+    if config_path.exists() {
+        if let Ok(content) = fs::read_to_string(&config_path) {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(p) = json["port"].as_u64() {
+                    if p > 0 && p <= 65535 {
+                        port = p as u16;
+                    }
                 }
-            }
-            if let Some(h) = json["host"].as_str() {
-                if !h.is_empty() {
-                    host = h.to_string();
+                if let Some(h) = json["host"].as_str() {
+                    if !h.is_empty() {
+                        host = h.to_string();
+                    }
                 }
-            }
-            if let Some(t) = json["root_token"].as_str() {
-                if !t.is_empty() {
-                    root_token = t.to_string();
+                if let Some(t) = json["root_token"].as_str() {
+                    if !t.is_empty() {
+                        root_token = t.to_string();
+                    }
                 }
             }
         }
+    } else {
+        need_write = true;
+    }
+
+    // 若 root_token 为空，自动生成一个
+    if root_token.is_empty() {
+        root_token = generate_random_token();
+        need_write = true;
+    }
+
+    // 将配置写回文件（确保 root_token 持久化）
+    if need_write {
+        let config_json = serde_json::json!({
+            "port": port,
+            "host": host,
+            "root_token": root_token
+        });
+        let _ = fs::write(
+            &config_path,
+            serde_json::to_string_pretty(&config_json).unwrap(),
+        );
     }
 
     AppConfig { port, host, root_token }
@@ -112,7 +139,7 @@ unsafe fn open_pty() -> Result<(RawFd, String), String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![get_backend_url])
+        .invoke_handler(tauri::generate_handler![get_backend_url, get_auth_token])
         .setup(|app| {
             let app_data_dir = app
                 .path()
@@ -202,9 +229,10 @@ pub fn run() {
             let master_owned = unsafe { OwnedFd::from_raw_fd(master_raw) };
             app.manage(PtyMaster(Mutex::new(Some(master_owned))));
 
-            // 存储后端 URL，供前端查询
+            // 存储后端 URL 和 auth token，供前端查询
             let backend_url = format!("http://{}:{}", config.host, config.port);
             app.manage(BackendUrl(backend_url));
+            app.manage(AuthToken(config.root_token.clone()));
 
             // 把 app_data_dir 存入 managed state，供菜单事件回调使用
             app.manage(app_data_dir.clone());
