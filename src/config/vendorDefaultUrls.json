@@ -25,5 +25,8 @@
     "mimo_token_plan": {
         "openai": "https://token-plan-cn.xiaomimimo.com/v1",
         "anthropic": "https://token-plan-cn.xiaomimimo.com/anthropic"
+    },
+    "opencode_go": {
+        "openai": "https://opencode.ai/zen/go/v1"
     }
 }

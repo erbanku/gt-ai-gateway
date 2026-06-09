@@ -17,8 +17,9 @@
                     <TokenDisplay :token="vendor.token" />
                 </a-descriptions-item>
                 <a-descriptions-item label="URLs">
-                    <div v-for="(url, key) in vendor.urls" :key="key" class="url-item">
-                        <strong>{{ key }}:</strong> {{ url }}
+                    <div v-for="item in getMergedUrls(vendor)" :key="item.key" class="url-item">
+                        <strong>{{ item.key }}:</strong> {{ item.url }}
+                        <a-tag v-if="item.isCustom" color="blue" style="margin-left: 6px; font-size: 11px;">自定义</a-tag>
                     </div>
                 </a-descriptions-item>
                 <a-descriptions-item label="创建时间">
@@ -39,6 +40,7 @@ import { getVendor } from '@/api/vendor';
 import { formatDate } from '@/utils/format';
 import TokenDisplay from '@/components/common/TokenDisplay.vue';
 import type { Vendor, VendorType } from '@/types/vendor';
+import { VENDOR_PRESET_URLS } from '@/utils/vendorPresets';
 
 const route = useRoute();
 const router = useRouter();
@@ -64,6 +66,17 @@ async function loadVendor(id: number) {
     }
 }
 
+function getMergedUrls(v: Vendor): { key: string; url: string; isCustom: boolean }[] {
+    const preset = VENDOR_PRESET_URLS[v.type] ?? {};
+    const custom = v.urls ?? {};
+    const keys = new Set([...Object.keys(preset), ...Object.keys(custom)]);
+    return [...keys].map(key => ({
+        key,
+        url: custom[key] ?? preset[key] ?? '',
+        isCustom: !!custom[key],
+    }));
+}
+
 function getTypeLabel(type: VendorType): string {
     const labels: Record<VendorType, string> = {
         aliyun: 'Aliyun (通义千问)',
@@ -72,6 +85,7 @@ function getTypeLabel(type: VendorType): string {
         deepseek: 'DeepSeek',
         mimo: 'Mimo',
         mimo_token_plan: 'Mimo Token Plan',
+        opencode_go: 'OpenCode Go',
         openai: 'OpenAI',
         anthropic: 'Anthropic',
         google: 'Google',
@@ -88,6 +102,7 @@ function getTypeColor(type: VendorType): string {
         deepseek: '',
         mimo: 'blue',
         mimo_token_plan: 'blue',
+        opencode_go: 'cyan',
         openai: 'green',
         anthropic: 'orange',
         google: '',

@@ -12,6 +12,7 @@ export enum VendorType {
     DEEPSEEK = "deepseek",
     MIMO = "mimo",
     MIMO_TOKEN_PLAN = "mimo_token_plan",
+    OPENCODE_GO = "opencode_go",
     OTHER = "other",
 }
 

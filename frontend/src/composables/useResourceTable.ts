@@ -31,7 +31,12 @@ export function useResourceTable<T, TSearch extends object>(
     async function loadData(): Promise<void> {
         loading.value = true;
         try {
-            const result = normalizeListResponse(await fetcher(searchForm as TSearch));
+            const query = {
+                ...searchForm,
+                page: pagination.current,
+                pageSize: pagination.pageSize,
+            } as TSearch;
+            const result = normalizeListResponse(await fetcher(query));
             data.value = result.list;
             pagination.total = result.total;
         } finally {
@@ -55,6 +60,7 @@ export function useResourceTable<T, TSearch extends object>(
 
     function handleTableChange(pag: TablePaginationConfig): void {
         setPage(pag.current ?? 1, pag.pageSize ?? pagination.pageSize);
+        void loadData();
     }
 
     if (immediate) {
