@@ -157,6 +157,7 @@ fn show_main_window(app: &tauri::AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![get_backend_url, get_auth_token])
         .setup(|app| {
             let app_data_dir = app
@@ -237,7 +238,24 @@ pub fn run() {
                 });
             }
 
-            cmd.spawn().expect("failed to spawn backend sidecar");
+            let mut child = cmd.spawn().expect("failed to spawn backend sidecar");
+
+            let app_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                if let Ok(status) = child.wait() {
+                    if status.code() == Some(98) {
+                        use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                        let app_handle_clone = app_handle.clone();
+                        app_handle.dialog()
+                            .message("启动失败：后端 8787 端口被占用，请彻底清理旧进程或使用该端口的其他程序后重试。")
+                            .title("启动错误")
+                            .kind(MessageDialogKind::Error)
+                            .show(move |_| {
+                                app_handle_clone.exit(1);
+                            });
+                    }
+                }
+            });
 
             // 父进程关闭 slave（已在子进程中 dup 到 0/1/2）
             unsafe { libc::close(slave_raw); }

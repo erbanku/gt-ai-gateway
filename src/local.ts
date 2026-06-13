@@ -134,10 +134,17 @@ async function startServer() {
 
     const hostname = process.env.HOST || "127.0.0.1";
 
-    serve({
+    const server = serve({
         fetch: (request) => app.fetch(request, bindings),
         port,
         hostname,
+    });
+
+    server.on('error', (e: any) => {
+        if (e.code === 'EADDRINUSE') {
+            console.error(`ERROR: Port ${port} is already in use. Exiting...`);
+            process.exit(98);
+        }
     });
 
     console.log(`Server listening on http://${hostname}:${port}`);
