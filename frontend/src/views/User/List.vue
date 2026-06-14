@@ -72,11 +72,9 @@
                     />
                 </template>
                 <template v-if="column.key === 'status'">
-                    <a-switch
-                        :checked="record.status === 'active'"
-                        @change="(checked: boolean) => handleStatusChange(record, checked)"
-                        :loading="(record as any).statusLoading"
-                    />
+                    <a-tag :color="record.status === 'active' ? 'success' : 'error'">
+                        {{ record.status === 'active' ? '已启用' : '已禁用' }}
+                    </a-tag>
                 </template>
                 <template v-if="column.key === 'action'">
                     <a-space>
@@ -98,11 +96,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Modal } from 'ant-design-vue/es';
 import type { TableColumnsType } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
-import { listUsers, updateUser } from '@/api/user';
-import { notifyError, notifySuccess } from '@/utils/requestFeedback';
+import { listUsers } from '@/api/user';
 import { useResourceTable } from '@/composables/useResourceTable';
 import TokenDisplay from '@/components/common/TokenDisplay.vue';
 import DialogCreate from './DialogCreate.vue';
@@ -156,30 +152,6 @@ function handleEditSuccess() {
     loadData();
 }
 
-function handleStatusChange(record: User, checked: boolean) {
-    const newStatus = checked ? 'active' : 'disabled';
-    const actionText = checked ? '正常' : '禁用';
-    const confirmAction = checked ? '启用' : '禁用';
-
-    Modal.confirm({
-        title: `确认${confirmAction}用户`,
-        content: `确定要将用户「${record.name}」的状态修改为${actionText}吗？`,
-        okText: '确定',
-        cancelText: '取消',
-        onOk: async () => {
-            (record as any).statusLoading = true;
-            try {
-                await updateUser(record.id, { status: newStatus });
-                record.status = newStatus;
-                notifySuccess(`用户状态已更新为${actionText}`);
-            } catch (error) {
-                notifyError(`状态更新失败`);
-            } finally {
-                (record as any).statusLoading = false;
-            }
-        },
-    });
-}
 
 function getPopupContainer(node: HTMLElement): HTMLElement {
     return node.parentElement ?? document.body;

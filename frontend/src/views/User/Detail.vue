@@ -32,6 +32,11 @@
                         {{ user.type === 'admin' ? '管理员' : '普通用户' }}
                     </a-tag>
                 </a-descriptions-item>
+                <a-descriptions-item label="状态">
+                    <a-tag :color="user.status === 'active' ? 'success' : 'error'">
+                        {{ user.status === 'active' ? '已启用' : '已禁用' }}
+                    </a-tag>
+                </a-descriptions-item>
                 <a-descriptions-item label="创建时间">
                     {{ formatDate(user.created_at) }}
                 </a-descriptions-item>

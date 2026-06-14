@@ -15,6 +15,15 @@
             <a-form-item label="用户名" name="name">
                 <a-input v-model:value="formState.name" placeholder="请输入用户名" />
             </a-form-item>
+            <a-form-item label="状态" name="status">
+                <a-switch
+                    v-model:checked="formState.status"
+                    checked-children="启用"
+                    un-checked-children="禁用"
+                    checked-value="active"
+                    un-checked-value="disabled"
+                />
+            </a-form-item>
             <a-form-item label="Token">
                 <div class="token-section">
                     <TokenDisplay :token="formState.token" />
@@ -51,6 +60,7 @@ const userId = ref<number>();
 const formState = reactive({
     name: '',
     token: '',
+    status: 'active' as 'active' | 'disabled',
 });
 
 const rules = {
@@ -61,6 +71,7 @@ function open(user: User) {
     userId.value = user.id;
     formState.name = user.name;
     formState.token = user.token;
+    formState.status = user.status || 'active';
     visible.value = true;
 }
 
@@ -89,6 +100,7 @@ async function handleOk() {
         const user = await updateUser(userId.value, {
             name: formState.name,
             token: formState.token,
+            status: formState.status,
         });
         notifySuccess('更新成功');
         emit('success', user);
@@ -104,6 +116,7 @@ function handleCancel() {
     visible.value = false;
     formState.name = '';
     formState.token = '';
+    formState.status = 'active';
     userId.value = undefined;
 }
 
