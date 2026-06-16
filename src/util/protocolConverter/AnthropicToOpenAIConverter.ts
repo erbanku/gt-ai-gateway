@@ -9,6 +9,10 @@ import type {
     OpenAIChunk,
     ProtocolStreamEvent,
 } from "./protocolTypes";
+import {
+    buildThinkingConfigFromAnthropic,
+    thinkingConfigToOpenAI,
+} from "./thinkingConfig";
 
 const ANTHROPIC_TO_OPENAI_STOP_REASON: Record<string, string> = {
     end_turn: "stop",
@@ -132,6 +136,12 @@ export class AnthropicToOpenAIConverter extends BaseConverter {
         }
         if (openaiToolChoice) {
             openaiReq.tool_choice = openaiToolChoice;
+        }
+        const reasoningEffort = thinkingConfigToOpenAI(
+            buildThinkingConfigFromAnthropic(clientReq.thinking),
+        );
+        if (reasoningEffort) {
+            openaiReq.reasoning_effort = reasoningEffort;
         }
 
         return openaiReq;

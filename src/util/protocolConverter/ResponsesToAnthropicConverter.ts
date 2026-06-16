@@ -12,6 +12,10 @@ import type {
     ResponsesNonStreamResponse,
     ResponsesContentPart,
 } from "./responsesTypes";
+import {
+    buildThinkingConfigFromOpenAIResponses,
+    thinkingConfigToAnthropic,
+} from "./thinkingConfig";
 
 /**
  * Responses API → Anthropic 转换器
@@ -103,20 +107,11 @@ export class ResponsesToAnthropicConverter extends BaseConverter {
             }
         }
 
-        // reasoning
-        if (req.reasoning?.effort) {
-            switch (req.reasoning.effort) {
-                case "none":
-                    anthropicReq.thinking = { type: "disabled" };
-                    break;
-                case "high":
-                    anthropicReq.thinking = { type: "enabled", budget_tokens: 10000 };
-                    break;
-                default:
-                    // low / medium → enabled with lower budget
-                    anthropicReq.thinking = { type: "enabled", budget_tokens: 5000 };
-                    break;
-            }
+        const thinking = thinkingConfigToAnthropic(
+            buildThinkingConfigFromOpenAIResponses(req.reasoning),
+        );
+        if (thinking) {
+            anthropicReq.thinking = thinking;
         }
 
         return anthropicReq;

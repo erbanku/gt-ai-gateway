@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { AnthropicToOpenAIConverter } from "../../../src/util/protocolConverter/AnthropicToOpenAIConverter";
 import { ConverterFactory } from "../../../src/util/protocolConverter/ConverterFactory";
+import { ReasoningEffort } from "../../../src/util/protocolConverter/thinkingConfig";
 import { ApiFormat } from "../../../src/constants";
 import type { AnthropicRequest, AnthropicResponse, OpenAIRequest, ProtocolStreamEvent } from "../../../src/util/protocolConverter/protocolTypes";
 
@@ -137,6 +138,39 @@ describe("AnthropicToOpenAIConverter - convertRequest", () => {
             type: "function",
             function: { name: "get_weather" },
         });
+    });
+
+    it("should convert Anthropic thinking budget to OpenAI reasoning_effort", () => {
+        const baseReq: AnthropicRequest = {
+            model: "claude-3-sonnet-20240229",
+            max_tokens: 1024,
+            messages: [{ role: "user", content: "Hello" }],
+        };
+
+        expect(converter.convertRequest({
+            ...baseReq,
+            thinking: { type: "disabled" },
+        }).reasoning_effort).toBe(ReasoningEffort.NONE);
+        expect(converter.convertRequest({
+            ...baseReq,
+            thinking: { type: "enabled", budget_tokens: 1024 },
+        }).reasoning_effort).toBe(ReasoningEffort.MINIMAL);
+        expect(converter.convertRequest({
+            ...baseReq,
+            thinking: { type: "enabled", budget_tokens: 3000 },
+        }).reasoning_effort).toBe(ReasoningEffort.LOW);
+        expect(converter.convertRequest({
+            ...baseReq,
+            thinking: { type: "enabled", budget_tokens: 5000 },
+        }).reasoning_effort).toBe(ReasoningEffort.MEDIUM);
+        expect(converter.convertRequest({
+            ...baseReq,
+            thinking: { type: "enabled", budget_tokens: 10000 },
+        }).reasoning_effort).toBe(ReasoningEffort.HIGH);
+        expect(converter.convertRequest({
+            ...baseReq,
+            thinking: { type: "enabled", budget_tokens: 16000 },
+        }).reasoning_effort).toBe(ReasoningEffort.XHIGH);
     });
 
     it("should include thinking blocks in assistant content", () => {

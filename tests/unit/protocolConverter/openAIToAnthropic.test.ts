@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { OpenAIToAnthropicConverter } from "../../../src/util/protocolConverter/OpenAIToAnthropicConverter";
 import { ConverterFactory } from "../../../src/util/protocolConverter/ConverterFactory";
+import { ReasoningEffort } from "../../../src/util/protocolConverter/thinkingConfig";
 import { ApiFormat } from "../../../src/constants";
 import type { AnthropicRequest, OpenAIRequest, OpenAIResponse, ProtocolStreamEvent } from "../../../src/util/protocolConverter/protocolTypes";
 
@@ -208,6 +209,51 @@ describe("OpenAIToAnthropicConverter - convertRequest", () => {
             ...baseReq,
             tool_choice: { type: "function", function: { name: "get_weather" } },
         }).tool_choice).toEqual({ type: "tool", name: "get_weather" });
+    });
+
+    it("should convert reasoning_effort to Anthropic thinking budgets", () => {
+        const baseReq: OpenAIRequest = {
+            model: "gpt-4",
+            messages: [{ role: "user", content: "Hello" }],
+        };
+
+        expect(converter.convertRequest({
+            ...baseReq,
+            reasoning_effort: ReasoningEffort.NONE,
+        }).thinking).toEqual({ type: "disabled" });
+        expect(converter.convertRequest({
+            ...baseReq,
+            reasoning_effort: ReasoningEffort.MINIMAL,
+        }).thinking).toEqual({ type: "enabled", budget_tokens: 1024 });
+        expect(converter.convertRequest({
+            ...baseReq,
+            reasoning_effort: ReasoningEffort.LOW,
+        }).thinking).toEqual({ type: "enabled", budget_tokens: 3000 });
+        expect(converter.convertRequest({
+            ...baseReq,
+            reasoning_effort: ReasoningEffort.MEDIUM,
+        }).thinking).toEqual({ type: "enabled", budget_tokens: 5000 });
+        expect(converter.convertRequest({
+            ...baseReq,
+            reasoning_effort: ReasoningEffort.HIGH,
+        }).thinking).toEqual({ type: "enabled", budget_tokens: 10000 });
+        expect(converter.convertRequest({
+            ...baseReq,
+            reasoning_effort: ReasoningEffort.XHIGH,
+        }).thinking).toEqual({ type: "enabled", budget_tokens: 16000 });
+    });
+
+    it("should convert reasoning.effort to Anthropic thinking", () => {
+        const openaiReq: OpenAIRequest = {
+            model: "gpt-4",
+            messages: [{ role: "user", content: "Hello" }],
+            reasoning: { effort: ReasoningEffort.HIGH },
+        };
+
+        expect(converter.convertRequest(openaiReq).thinking).toEqual({
+            type: "enabled",
+            budget_tokens: 10000,
+        });
     });
 
     it("should preserve raw tool arguments when JSON parsing fails", () => {

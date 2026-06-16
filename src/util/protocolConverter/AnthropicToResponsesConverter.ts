@@ -12,6 +12,10 @@ import type {
     ResponsesOutputItem,
     ResponsesInputItem,
 } from "./responsesTypes";
+import {
+    buildThinkingConfigFromAnthropic,
+    thinkingConfigToOpenAIResponses,
+} from "./thinkingConfig";
 
 const STOP_REASON_MAP: Record<string, string> = {
     completed: "end_turn",
@@ -183,9 +187,11 @@ export class AnthropicToResponsesConverter extends BaseConverter {
             }
         }
 
-        // thinking → reasoning
-        if (req.thinking?.type === "enabled") {
-            responsesReq.reasoning = { effort: "high" };
+        const reasoning = thinkingConfigToOpenAIResponses(
+            buildThinkingConfigFromAnthropic(req.thinking),
+        );
+        if (reasoning) {
+            responsesReq.reasoning = reasoning;
         }
 
         return responsesReq;

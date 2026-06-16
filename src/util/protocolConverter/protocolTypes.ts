@@ -1,3 +1,5 @@
+import type { ReasoningEffort } from "./thinkingConfig";
+
 export interface AnthropicContentBlock {
     type: "text" | "image" | "tool_use" | "tool_result" | "thinking";
     text?: string;
@@ -85,6 +87,10 @@ export interface OpenAIRequest {
     stop?: string | string[];
     tools?: OpenAITool[];
     tool_choice?: "auto" | "none" | "required" | { type: "function"; function: { name: string } };
+    reasoning_effort?: ReasoningEffort;
+    reasoning?: {
+        effort?: ReasoningEffort;
+    };
 }
 
 export interface AnthropicResponse {

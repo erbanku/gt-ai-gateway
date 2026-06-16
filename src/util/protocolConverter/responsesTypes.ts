@@ -1,3 +1,5 @@
+import type { ReasoningEffort } from "./thinkingConfig";
+
 /**
  * Responses API 请求/响应类型定义
  *
@@ -20,7 +22,7 @@ export interface ResponsesRequest {
     tools?: ResponsesTool[];
     tool_choice?: ResponsesToolChoice;
     reasoning?: {
-        effort?: "none" | "low" | "medium" | "high";
+        effort?: ReasoningEffort;
     };
     metadata?: Record<string, unknown>;
 }
