@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
-import { cpSync, existsSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, rmSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import Components from 'unplugin-vue-components/vite'
 import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers'
@@ -27,6 +27,22 @@ function dataViewerDistOnlyPlugin() {
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [
+        // 去掉 HTML 中的 crossorigin 属性（Tauri v2 自定义协议兼容）
+        {
+            name: 'remove-crossorigin',
+            closeBundle() {
+                const distDir = fileURLToPath(new URL('./dist', import.meta.url));
+                for (const file of ['index.html', 'splash.html']) {
+                    const path = resolve(distDir, file);
+                    try {
+                        const html = readFileSync(path, 'utf-8');
+                        writeFileSync(path, html.replace(/ crossorigin/g, ''), 'utf-8');
+                    } catch (e) {
+                        console.warn('remove-crossorigin:', e instanceof Error ? e.message : e);
+                    }
+                }
+            },
+        },
         vue(),
         Components({
             resolvers: [
@@ -62,5 +78,8 @@ export default defineConfig({
                 splash: fileURLToPath(new URL('./splash.html', import.meta.url)),
             },
         },
+        // Tauri v2 自定义协议下需要去掉 crossorigin
+        modulePreload: false,
+        crossOrigin: false,
     },
 })
