@@ -39,6 +39,10 @@
                     <LinkOutlined />
                     <span>接入配置</span>
                 </a-menu-item>
+                <a-menu-item key="/client-manager">
+                    <AppstoreAddOutlined />
+                    <span>客户端管理</span>
+                </a-menu-item>
                 <a-menu-item key="/advanced-settings">
                     <ControlOutlined />
                     <span>高级设置</span>
@@ -83,7 +87,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { DashboardOutlined, UserOutlined, ApiOutlined, SettingOutlined, FileTextOutlined, ExperimentOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LinkOutlined, DollarOutlined, ControlOutlined, CodeOutlined } from '@ant-design/icons-vue';
+import { DashboardOutlined, UserOutlined, ApiOutlined, SettingOutlined, FileTextOutlined, ExperimentOutlined, MenuFoldOutlined, MenuUnfoldOutlined, LinkOutlined, DollarOutlined, ControlOutlined, CodeOutlined, AppstoreAddOutlined } from '@ant-design/icons-vue';
 import { useAppStore } from '@/stores/app';
 import { checkUpdate } from '@/api/system';
 
@@ -106,6 +110,7 @@ const selectedKeys = computed(() => {
     if (path.startsWith('/balance')) return ['/balance'];
     if (path.startsWith('/api-test')) return ['/api-test'];
     if (path.startsWith('/integration')) return ['/integration'];
+    if (path.startsWith('/client-manager')) return ['/client-manager'];
     if (path.startsWith('/advanced-settings')) return ['/advanced-settings'];
     if (path.startsWith('/developer')) return ['/developer'];
     return [path];

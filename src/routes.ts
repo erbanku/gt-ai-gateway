@@ -11,6 +11,7 @@ import systemController from "./controller/systemController";
 import statsController from "./controller/statsController";
 import balanceController from "./controller/balanceController";
 import configController from "./controller/configController";
+import clientConfigController from "./controller/clientConfigController";
 import configService from "./service/configService";
 import ormService from "./service/ormService";
 import authMiddleware from "./middleware/authMiddleware";
@@ -85,6 +86,9 @@ app.get("/status.json", authMiddleware.requireAdmin, systemController.status);
 app.get("/update.json", authMiddleware.requireAdmin, systemController.checkUpdate);
 app.get("/config.json", authMiddleware.requireAdmin, configController.getConfig);
 app.put("/config.json", authMiddleware.requireAdmin, configController.updateConfig);
+app.get("/client-config/status.json", authMiddleware.requireAdmin, clientConfigController.status);
+app.post("/client-config/apply.json", authMiddleware.requireAdmin, clientConfigController.apply);
+app.post("/client-config/restore.json", authMiddleware.requireAdmin, clientConfigController.restore);
 
 // Vendor (需要管理员权限)
 app.get("/vendor/preset-urls.json", authMiddleware.requireAdmin, vendorController.getPresetUrls);

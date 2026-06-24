@@ -21,6 +21,7 @@ import RecordDetail from '@/views/Record/Detail.vue';
 import BalanceIndex from '@/views/Balance/Index.vue';
 import ApiTestIndex from '@/views/ApiTest/Index.vue';
 import IntegrationIndex from '@/views/Integration/Index.vue';
+import ClientManager from '@/views/ClientManager.vue';
 import AdvancedSettings from '@/views/AdvancedSettings.vue';
 import Developer from '@/views/Developer.vue';
 
@@ -138,6 +139,12 @@ const routes: RouteRecordRaw[] = [
                 name: 'Integration',
                 component: IntegrationIndex,
                 meta: { title: '接入配置' },
+            },
+            {
+                path: 'client-manager',
+                name: 'ClientManager',
+                component: ClientManager,
+                meta: { title: '客户端管理' },
             },
             {
                 path: 'advanced-settings',
