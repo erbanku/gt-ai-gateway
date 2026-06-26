@@ -135,6 +135,7 @@
                                         <div class="icon-placeholder" style="display: flex; align-items: center; justify-content: center;" v-if="restoringBackupId === backup.id">
                                             <a-spin size="small" />
                                         </div>
+                                        <CheckCircleFilled v-else-if="client.activeBackupId === backup.id" class="current-config-icon" />
                                         <div
                                             v-else
                                             class="empty-check-circle"
@@ -941,6 +942,12 @@ function getVendorTypeTagStyle(type?: VendorType) {
 }
 
 function getCurrentConfigName(client: ClientConfigStatus): string {
+    if (client.activeBackupId) {
+        const activeBackup = client.backups.find(b => b.id === client.activeBackupId);
+        if (activeBackup) {
+            return activeBackup.name;
+        }
+    }
     return `${client.displayName} 当前生效配置`;
 }
 

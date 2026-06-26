@@ -45,6 +45,7 @@ interface ClientConfigStatus {
     backupExists: boolean;
     backupCount: number;
     backups: ClientConfigBackupInfo[];
+    activeBackupId?: number;
     currentConfig: CurrentClientConfig | null;
     configPath: string;
     configPaths: string[];

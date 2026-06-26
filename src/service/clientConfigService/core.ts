@@ -102,12 +102,31 @@ async function getBackups(client: ClientName, adapter: ConfigAdapter): Promise<C
 
 
 async function enrichStatus(status: ClientConfigStatus, adapter: ConfigAdapter): Promise<ClientConfigStatus> {
-    const backups = await getBackups(status.client, adapter);
+    const records = await SgClientConfigBackup.query()
+        .where("client", status.client)
+        .orderBy("id", "desc")
+        .get();
+
+    const backups = await Promise.all(normalizeBackupRecords(records).map(record => toBackupInfo(record, adapter)));
+
+    let activeBackupId: number | undefined;
+    if (status.configured) {
+        const currentContent = await adapter.readConfigFiles();
+        const currentContentStr = JSON.stringify(currentContent);
+        for (const record of records) {
+            if (JSON.stringify(record.configContent) === currentContentStr) {
+                activeBackupId = record.id;
+                break;
+            }
+        }
+    }
+
     return {
         ...status,
         backupExists: backups.length > 0,
         backupCount: backups.length,
         backups,
+        activeBackupId,
     };
 }
 
