@@ -56,7 +56,7 @@
                                                 <div class="config-summary-line">
                                                     <div v-if="client.currentConfig.model" class="config-flow">
                                                         <a-tag color="purple" class="merged-mode-tag">模型</a-tag>
-                                                        <span class="flow-text">{{ client.currentConfig.model }}</span>
+                                                        <span class="model-text">{{ client.currentConfig.model }}</span>
                                                     </div>
                                                     <div class="config-flow">
                                                         <a-tag :color="getConnectionModeColor(client.currentConfig.connectionMode)" class="merged-mode-tag">
@@ -131,7 +131,7 @@
                                             <div v-if="backup.config" class="config-summary-line">
                                                 <div v-if="backup.config.model" class="config-flow">
                                                     <a-tag color="purple" class="merged-mode-tag">模型</a-tag>
-                                                    <span class="flow-text">{{ backup.config.model }}</span>
+                                                    <span class="model-text">{{ backup.config.model }}</span>
                                                 </div>
                                                 <div class="config-flow">
                                                     <a-tag :color="getConnectionModeColor(backup.config.connectionMode)" class="merged-mode-tag">
@@ -1227,6 +1227,11 @@ function updateBackupInfo(backup: ClientConfigBackupInfo): void {
     margin-right: 2px;
     border-radius: 4px;
     border-color: transparent;
+}
+
+.model-text {
+    color: var(--text-primary, #262626);
+    font-weight: 500;
 }
 
 .flow-arrow {
