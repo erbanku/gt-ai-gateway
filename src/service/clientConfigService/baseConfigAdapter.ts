@@ -19,7 +19,6 @@ abstract class BaseConfigAdapter implements ConfigAdapter {
     readonly displayName: string;
     abstract readonly protocol: ApiFormat;
     abstract readonly defaultGatewaySuffix: string;
-    readonly configPath: string;
     readonly configPaths: string[];
 
     abstract parseConfigContent(configContent: ClientConfigFileSystemContent): ClientConfigFields | null;
@@ -30,15 +29,16 @@ abstract class BaseConfigAdapter implements ConfigAdapter {
         path: PathApi,
         client: ClientName,
         displayName: string,
-        configPath: string,
-        configPaths?: string[],
+        configPaths: string[],
     ) {
         this.fs = fs;
         this.path = path;
         this.client = client;
         this.displayName = displayName;
-        this.configPath = configPath;
-        this.configPaths = configPaths || [configPath];
+        if (!configPaths || configPaths.length === 0) {
+            throw new Error("configPaths cannot be empty");
+        }
+        this.configPaths = configPaths;
     }
 
 
@@ -58,7 +58,7 @@ abstract class BaseConfigAdapter implements ConfigAdapter {
 
 
     async isInstalled(): Promise<boolean> {
-        return await configAdapterUtils.pathExists(this.fs, this.path.dirname(this.configPath));
+        return await configAdapterUtils.pathExists(this.fs, this.path.dirname(this.configPaths[0]));
     }
 
 

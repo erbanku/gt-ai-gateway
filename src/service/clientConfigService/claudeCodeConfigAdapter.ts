@@ -9,7 +9,7 @@ class ClaudeCodeConfigAdapter extends BaseConfigAdapter {
     readonly defaultGatewaySuffix = "/llm";
 
     constructor(fs: FileSystemApi, path: PathApi, homeDir: string) {
-        super(fs, path, ClientName.CLAUDE_CODE, "Claude Code", path.join(homeDir, ".claude", "settings.json"));
+        super(fs, path, ClientName.CLAUDE_CODE, "Claude Code", [path.join(homeDir, ".claude", "settings.json")]);
     }
 
     private buildBaseUrl(fields: ClientConfigFields): string {
@@ -26,7 +26,7 @@ class ClaudeCodeConfigAdapter extends BaseConfigAdapter {
     }
 
     parseConfigContent(configContent: ClientConfigFileSystemContent): ClientConfigFields | null {
-        const content = configContent[this.configPath] || "";
+        const content = configContent[this.configPaths[0]] || "";
         if (!content) {
             return null;
         }
@@ -48,7 +48,7 @@ class ClaudeCodeConfigAdapter extends BaseConfigAdapter {
     }
 
     patchConfigContent(content: ClientConfigFileSystemContent, fields: ClientConfigFields): ClientConfigFileSystemContent {
-        const oldContent = content[this.configPath] || "";
+        const oldContent = content[this.configPaths[0]] || "";
         const config = configAdapterUtils.parseJsonConfig(oldContent);
         config.env = {
             ...(config.env || {}),
@@ -74,7 +74,7 @@ class ClaudeCodeConfigAdapter extends BaseConfigAdapter {
         }
 
         return {
-            [this.configPath]: `${JSON.stringify(config, null, 4)}\n`,
+            [this.configPaths[0]]: `${JSON.stringify(config, null, 4)}\n`,
         };
     }
 }

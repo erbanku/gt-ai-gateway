@@ -91,7 +91,7 @@ async function enrichGatewayUser(config: ClientConfigFields | null): Promise<Cur
     const gatewayUser = await configAdapterUtils.findGatewayUserByToken(config.apiKey);
     return {
         ...config,
-        configPath: "",
+        configPaths: [],
         gatewayUser,
     };
 }

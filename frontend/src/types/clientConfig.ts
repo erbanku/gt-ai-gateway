@@ -27,13 +27,11 @@ export interface ClientConfigStatus {
     activeConfigModified: boolean;
     currentConfig: CurrentClientConfig | null;
     defaultGatewaySuffix: string;
-    configPath: string;
     configPaths: string[];
     message?: string;
 }
 
 export interface CurrentClientConfig {
-    configPath: string;
     connectionMode: ClientConnectionMode;
     gatewayUrl: string;
     apiKey: string;

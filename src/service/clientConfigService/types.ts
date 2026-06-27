@@ -45,7 +45,6 @@ interface AdapterConfigStatus {
     configured: boolean;
     currentConfig: ClientConfigFields | null;
     defaultGatewaySuffix: string;
-    configPath: string;
     configPaths: string[];
     message?: string;
 }
@@ -60,7 +59,7 @@ interface ClientConfigStatus extends AdapterConfigStatus {
 }
 
 interface CurrentClientConfig extends ClientConfigFields {
-    configPath: string;
+    configPaths: string[];
 }
 
 interface CurrentClientConfigWithUser extends CurrentClientConfig {
@@ -103,9 +102,9 @@ interface ConfigAdapter {
     readonly client: ClientName;
     readonly displayName: string;
     readonly protocol: ApiFormat;
-    readonly configPath: string;
-    readonly configPaths: string[];
     readonly defaultGatewaySuffix: string;
+
+    readonly configPaths: string[];
 
     isInstalled(): Promise<boolean>;
     readConfig(): Promise<ClientConfigFileSystemContent>;

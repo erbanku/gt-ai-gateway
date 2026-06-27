@@ -58,7 +58,7 @@ async function buildClientStatus(adapter: ConfigAdapter, fs: FileSystemApi): Pro
     let message: string | undefined;
     let currentConfig = null;
 
-    if (installed && await pathExists(fs, adapter.configPath)) {
+    if (installed && await pathExists(fs, adapter.configPaths[0])) {
         try {
             currentConfig = adapter.parseConfigContent(await adapter.readConfig());
             configured = Boolean(currentConfig);
@@ -75,7 +75,6 @@ async function buildClientStatus(adapter: ConfigAdapter, fs: FileSystemApi): Pro
         installed,
         configured,
         currentConfig,
-        configPath: adapter.configPath,
         configPaths: adapter.configPaths,
         message,
     };
