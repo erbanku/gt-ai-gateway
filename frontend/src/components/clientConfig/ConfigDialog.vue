@@ -32,7 +32,22 @@
                         <a-input :value="protocolLabel" disabled />
                     </a-form-item>
                     <a-form-item label="服务端地址" required>
-                        <a-input v-model:value="form.gatewayUrl" :disabled="isDetail" />
+                        <a-select
+                            v-model:value="form.gatewayUrl"
+                            placeholder="请输入或选择服务端地址"
+                            show-search
+                            allow-clear
+                            :options="gatewayUrlOptions"
+                            :disabled="isDetail"
+                            :filter-option="false"
+                            option-label-prop="value"
+                            @search="handleGatewayUrlSearch"
+                        >
+                            <template #option="{ value, isCustom }">
+                                <span v-if="isCustom" style="color: var(--accent-primary)">使用自定义地址: </span>
+                                {{ value }}
+                            </template>
+                        </a-select>
                     </a-form-item>
                     <a-form-item required>
                         <template #label>
@@ -257,6 +272,7 @@ const emit = defineEmits<{
 
 const saving = ref(false);
 const vendorModels = ref<VendorModel[]>([]);
+const gatewayUrlSearch = ref('');
 
 const visible = computed({
     get: () => props.open,
@@ -264,6 +280,21 @@ const visible = computed({
 });
 
 const isDetail = computed(() => props.mode === 'detail');
+
+const gatewayUrlOptions = computed(() => {
+    const options = [];
+    if (props.defaultGatewayUrl) {
+        options.push({ value: props.defaultGatewayUrl, label: props.defaultGatewayUrl, isCustom: false });
+    }
+    if (gatewayUrlSearch.value && gatewayUrlSearch.value !== props.defaultGatewayUrl) {
+        options.unshift({ value: gatewayUrlSearch.value, label: gatewayUrlSearch.value, isCustom: true });
+    }
+    return options;
+});
+
+function handleGatewayUrlSearch(val: string) {
+    gatewayUrlSearch.value = val;
+}
 
 const protocolLabel = computed(() => props.selectedClient ? clientProtocolLabels[props.selectedClient.client] : '');
 
