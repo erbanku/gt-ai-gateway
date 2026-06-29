@@ -255,7 +255,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue';
+import { onMounted, reactive, ref, watch, createVNode } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { message, Modal } from 'ant-design-vue/es';
 import { ArrowRightOutlined, CheckCircleFilled, DeleteOutlined, EditOutlined, ImportOutlined, InfoCircleOutlined, ReloadOutlined, PlusOutlined, SyncOutlined } from '@ant-design/icons-vue';
@@ -542,9 +542,15 @@ function applyConfig(client: ClientName, backupId?: number): void {
         return;
     }
 
+    const clientName = target?.displayName || '客户端';
     Modal.confirm({
-        title: `切换 ${target?.displayName || '客户端'} 配置？`,
-        content: `将这一份配置写入 ${target?.displayName || '客户端'} 在本机的配置文件中`,
+        title: `切换 ${clientName} 配置？`,
+        content: createVNode('div', null, [
+            createVNode('div', null, `将这一份配置写入 ${clientName} 在本机的配置文件中`),
+            createVNode('div', { 
+                style: 'margin-top: 12px; padding: 8px 12px; background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; color: #d46b08; font-size: 13px;' 
+            }, `注意：切换后，请退出 ${clientName} 再重新打开，客户端将会使用新配置了`),
+        ]),
         okText: '切换',
         okType: 'danger',
         cancelText: '取消',
