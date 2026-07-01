@@ -24,9 +24,10 @@
    - 直接点击专属快捷链接前往 API 令牌管理页：[https://dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)
    - 点击右侧的 `Create Token` (创建令牌) 按钮，拉到最下方选择 `Create Custom Token` (创建自定义令牌)。
    - **Token 名称 (Token name)**：随便填，比如 `GitHub Actions Deploy`。
-   - **权限配置 (Permissions)**：点击 `Add more`，确保完整添加以下 **两项** 权限：
+   - **权限配置 (Permissions)**：点击 `Add more`，确保完整添加以下 **三项** 权限：
      - `Account` (帐户) | `D1` | `Edit` (编辑)
      - `Account` (帐户) | `Worker Scripts` (Worker 脚本) | `Edit` (编辑)
+     - `Account` (帐户) | `Workers KV Storage` (Workers KV 存储) | `Edit` (编辑)
    - 其它选项保持默认，拉到最下面点击 `Continue to summary`，然后点击 `Create Token`。
    - ⚠️ **核心警告**：此时屏幕上会显示出这串 Token 密钥，**它只显示这一次！刷新就会永远消失！** 请务必立刻将它复制下来备用。
 
