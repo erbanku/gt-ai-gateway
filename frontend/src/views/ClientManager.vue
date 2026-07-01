@@ -408,13 +408,18 @@ async function handleConfigSave(request: any): Promise<void> {
     if (backup) {
         if (backup.enabled) {
             const clientName = client.displayName || '客户端';
+            let restartHint = `注意：切换后，请退出 ${clientName} 再重新打开，客户端将会使用新配置。`;
+            if (client.client === ClientName.CODEX) {
+                restartHint = `注意：切换后，请彻底退出并重新打开 ${clientName}。此外，需要开启新会话才会切换到新模型（codex会将旧会话绑定到之前的模型）。`;
+            }
+
             Modal.confirm({
                 title: `保存并应用 ${clientName} 配置？`,
                 content: createVNode('div', null, [
                     createVNode('div', null, `将这一份配置写入 ${clientName} 在本机的配置文件中`),
                     createVNode('div', { 
                         style: 'margin-top: 12px; padding: 8px 12px; background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; color: #d46b08; font-size: 13px;' 
-                    }, `注意：切换后，请退出 ${clientName} 再重新打开，客户端将会使用新配置了`),
+                    }, restartHint),
                 ]),
                 okText: '保存并写入',
                 okType: 'primary',
@@ -574,13 +579,18 @@ function applyConfig(client: ClientName, backupId?: number): void {
     }
 
     const clientName = target?.displayName || '客户端';
+    let restartHint = `注意：切换后，请退出 ${clientName} 再重新打开，客户端将会使用新配置。`;
+    if (client === ClientName.CODEX) {
+        restartHint = `注意：切换后，请彻底退出并重新打开 ${clientName}。此外，需要开启新会话才会切换到新模型（codex会将旧会话绑定到之前的模型）。`;
+    }
+
     Modal.confirm({
         title: `切换 ${clientName} 配置？`,
         content: createVNode('div', null, [
             createVNode('div', null, `将这一份配置写入 ${clientName} 在本机的配置文件中`),
             createVNode('div', { 
                 style: 'margin-top: 12px; padding: 8px 12px; background-color: #fffbe6; border: 1px solid #ffe58f; border-radius: 6px; color: #d46b08; font-size: 13px;' 
-            }, `注意：切换后，请退出 ${clientName} 再重新打开，客户端将会使用新配置了`),
+            }, restartHint),
         ]),
         okText: '切换',
         okType: 'danger',
