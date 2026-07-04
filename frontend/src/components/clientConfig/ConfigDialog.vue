@@ -1,5 +1,5 @@
 <template>
-    <a-drawer
+    <a-modal
         v-model:open="visible"
         :title="dialogTitle"
         :confirm-loading="saving"
@@ -243,7 +243,7 @@
                 </a-select>
             </a-form-item>
         </a-form>
-    </a-drawer>
+    </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -267,18 +267,37 @@ import {
     getVendorUrl,
 } from '@/utils/clientManagerUtils';
 
+import { listUsers } from '@/api/user';
+import { listModels } from '@/api/model';
+import { normalizeListResponse } from '@/utils/listResponse';
+import { getVendorPresetUrls, listVendors } from '@/api/vendor';
+
 const props = defineProps<{
     open: boolean;
     mode: 'create' | 'edit' | 'detail';
     selectedClient: ClientConfigStatus | null;
     backup: ClientConfigBackupInfo | null;
     localConfig: CurrentClientConfig | null;
-    users: User[];
-    models: Model[];
-    vendors: Vendor[];
-    vendorPresetUrls: Record<string, Record<string, string>>;
     defaultGatewayUrl: string;
 }>();
+
+const users = ref<User[]>([]);
+const models = ref<Model[]>([]);
+const vendors = ref<Vendor[]>([]);
+const vendorPresetUrls = ref<Record<string, Record<string, string>>>({});
+
+async function loadOptions() {
+    const [userResult, modelResult, vendorResult, presetUrls] = await Promise.all([
+        listUsers({ pageSize: 1000 }),
+        listModels({ pageSize: 1000 }),
+        listVendors({ pageSize: 1000 }),
+        getVendorPresetUrls(),
+    ]);
+    users.value = normalizeListResponse(userResult).list;
+    models.value = normalizeListResponse(modelResult).list;
+    vendors.value = normalizeListResponse(vendorResult).list;
+    vendorPresetUrls.value = presetUrls;
+}
 
 const emit = defineEmits<{
     (e: 'update:open', value: boolean): void;
@@ -300,7 +319,7 @@ const isDetail = computed(() => props.mode === 'detail');
 const isVendorRecognized = computed(() => {
     if (form.connectionMode !== ClientConnectionMode.VENDOR) return true;
     if (!form.vendorId) return false;
-    return props.vendors.some(v => v.id === form.vendorId);
+    return vendors.value.some(v => v.id === form.vendorId);
 });
 
 const gatewayUrlOptions = computed(() => {
@@ -320,7 +339,7 @@ function handleGatewayUrlSearch(val: string) {
 
 const protocolLabel = computed(() => props.selectedClient ? clientProtocolLabels[props.selectedClient.client] : '');
 
-const enabledModels = computed(() => props.models.filter(m => m.enable));
+const enabledModels = computed(() => models.value.filter(m => m.enable));
 
 const dialogTitle = computed(() => {
     if (!props.selectedClient) return '配置客户端';
@@ -355,6 +374,9 @@ watch(() => props.open, async (isOpen) => {
         initialRequestStr.value = '';
         return;
     }
+    
+    await loadOptions();
+
     if (props.localConfig) {
         initFromBackup(props.localConfig);
     } else if (props.mode === 'create') {
@@ -381,14 +403,14 @@ function initCreateForm(): void {
     unrecognizedVendorUrl.value = '';
     unrecognizedVendorApiKey.value = '';
 
-    const activeUser = props.users.find(u => u.status === 'active');
+    const activeUser = users.value.find(u => u.status === 'active');
     if (activeUser) form.userId = activeUser.id;
 
     const firstModel = enabledModels.value[0];
     if (firstModel) form.model = firstModel.name;
 
-    if (props.vendors.length > 0) {
-        form.vendorId = props.vendors[0]!.id;
+    if (vendors.value.length > 0) {
+        form.vendorId = vendors.value[0]!.id;
         onVendorChange();
     }
 }
@@ -414,7 +436,7 @@ function initFromBackup(config: CurrentClientConfig): void {
         form.gatewayUrl = '';
         form.model = '';
         form.userId = null;
-        const recognized = config.matchedVendorId && props.vendors.some(v => v.id === config.matchedVendorId);
+        const recognized = config.matchedVendorId && vendors.value.some(v => v.id === config.matchedVendorId);
         unrecognizedVendorUrl.value = recognized ? '' : config.gatewayUrl;
         unrecognizedVendorApiKey.value = recognized ? '' : (config.apiKey || '');
     } else {
@@ -428,26 +450,26 @@ function initFromBackup(config: CurrentClientConfig): void {
 }
 
 function findUser(id: number): User | undefined {
-    return props.users.find(u => u.id === id);
+    return users.value.find(u => u.id === id);
 }
 
 function findVendor(id: number): Vendor | undefined {
-    return props.vendors.find(v => v.id === id);
+    return vendors.value.find(v => v.id === id);
 }
 
 async function onConnectionModeChange(mode: string): Promise<void> {
     if (isDetail.value) return;
     form.connectionMode = mode as ClientConnectionMode;
     if (form.connectionMode === ClientConnectionMode.VENDOR) {
-        if (!form.vendorId && props.vendors.length > 0) {
-            form.vendorId = props.vendors[0]!.id;
+        if (!form.vendorId && vendors.value.length > 0) {
+            form.vendorId = vendors.value[0]!.id;
         }
         await onVendorChange();
     }
 }
 
 async function onVendorChange(): Promise<void> {
-    const vendor = props.vendors.find(v => v.id === form.vendorId);
+    const vendor = vendors.value.find(v => v.id === form.vendorId);
     if (!vendor) {
         vendorModels.value = [];
         form.upstreamUrl = '';
@@ -457,7 +479,7 @@ async function onVendorChange(): Promise<void> {
     unrecognizedVendorUrl.value = '';
     unrecognizedVendorApiKey.value = '';
 
-    form.upstreamUrl = getVendorUrl(vendor, form.protocol, props.vendorPresetUrls);
+    form.upstreamUrl = getVendorUrl(vendor, form.protocol, vendorPresetUrls.value);
     vendorModels.value = await listVendorModels(vendor.id);
     form.upstreamModel = vendorModels.value[0]?.model_id || '';
 }
