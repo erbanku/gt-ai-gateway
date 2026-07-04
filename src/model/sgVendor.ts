@@ -13,7 +13,7 @@ class SgVendor extends Model {
     name!: string;
     token!: string;
     urls!: string;  // JSON string
-    auth_mode!: VendorAuthMode;
+    config!: string;  // JSON string
 
     created_at!: Date;
     updated_at!: Date;
@@ -24,6 +24,17 @@ class SgVendor extends Model {
     getUrls(): Record<string, string> {
         try {
             return this.urls ? JSON.parse(this.urls) : {};
+        } catch {
+            return {};
+        }
+    }
+
+    /**
+     * Parse config JSON string to object
+     */
+    getConfig(): Record<string, any> {
+        try {
+            return this.config ? JSON.parse(this.config) : {};
         } catch {
             return {};
         }
@@ -104,7 +115,8 @@ class SgVendor extends Model {
      * 获取当前 vendor 的认证模式，默认为 bearer_token
      */
     getAuthMode(): VendorAuthMode {
-        return this.auth_mode === VendorAuthMode.API_KEY
+        const config = this.getConfig();
+        return config.auth_mode === VendorAuthMode.API_KEY
             ? VendorAuthMode.API_KEY
             : VendorAuthMode.BEARER_TOKEN;
     }

@@ -207,7 +207,7 @@ async function handleOk() {
             type: formState.type,
             name: formState.name,
             token: formState.token,
-            auth_mode: formState.auth_mode,
+            config: { auth_mode: formState.auth_mode },
         };
 
         // 只提交用户自定义的 URLs，后端对未定义的 key 回退到 preset

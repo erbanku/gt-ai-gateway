@@ -13,7 +13,7 @@ async function getVendorByName(name: string): Promise<SgVendor | null> {
 
 async function updateVendor(
     vendorId: number,
-    data: { type?: string; name?: string; token?: string; urls?: Record<string, string>; auth_mode?: string },
+    data: { type?: string; name?: string; token?: string; urls?: Record<string, string>; config?: Record<string, any> },
 ): Promise<SgVendor | null> {
     const vendor = await SgVendor.query().find(vendorId);
 
@@ -32,11 +32,9 @@ async function updateVendor(
         updateData.urls = JSON.stringify(data.urls);
     }
 
-    // Handle auth_mode
-    if (data.auth_mode !== undefined) {
-        updateData.auth_mode = data.auth_mode === VendorAuthMode.BEARER_TOKEN
-            ? VendorAuthMode.BEARER_TOKEN
-            : VendorAuthMode.API_KEY;
+    // Handle config - if provided, serialize as JSON string
+    if (data.config !== undefined) {
+        updateData.config = JSON.stringify(data.config);
     }
 
     await SgVendor.query()
