@@ -325,7 +325,10 @@ export class AnthropicToOpenAIConverter extends BaseConverter {
 
             if (delta.tool_calls && delta.tool_calls.length > 0) {
                 for (const tc of delta.tool_calls) {
-                    if (tc.id || tc.function?.name) {
+                    // Check if this is a new tool call (different id) or continuation of existing one
+                    const isNewToolCall = tc.id && tc.id !== this.currentToolCallId;
+
+                    if (isNewToolCall) {
                         if (this.sentFirstChunk || this.hasYieldedThinking) {
                             events.push({
                                 event: "content_block_stop",

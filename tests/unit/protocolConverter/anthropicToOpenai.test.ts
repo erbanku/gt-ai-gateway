@@ -674,6 +674,109 @@ describe("AnthropicToOpenAIConverter - convertStreamEvent", () => {
         });
     });
 
+    it("should only create one content_block_start when upstream sends same tool_call id with null name in subsequent chunks", () => {
+        // This simulates the issue where glm-5.2 sends tool_call with name in first chunk
+        // but null name in subsequent chunks with the same id
+        converter.convertStreamEvent(JSON.stringify({
+            id: "chatcmpl-123",
+            object: "chat.completion.chunk",
+            created: 1677652288,
+            model: "gpt-4",
+            choices: [{ index: 0, delta: { role: "assistant" }, finish_reason: null }],
+        }));
+
+        // First chunk: has id and name
+        const startEvents1 = converter.convertStreamEvent(JSON.stringify({
+            id: "chatcmpl-123",
+            object: "chat.completion.chunk",
+            created: 1677652288,
+            model: "gpt-4",
+            choices: [
+                {
+                    index: 0,
+                    delta: {
+                        tool_calls: [
+                            {
+                                index: 0,
+                                id: "chatcmpl-tool-xxx",
+                                type: "function",
+                                function: { name: "Bash", arguments: "" },
+                            },
+                        ],
+                    },
+                    finish_reason: null,
+                },
+            ],
+        }));
+
+        // Should have content_block_start with name "Bash"
+        expect(startEvents1.map((e) => e.event)).toEqual(["content_block_start"]);
+        const startData1 = parseStreamEventData(startEvents1, 0);
+        expect(startData1.content_block.type).toBe("tool_use");
+        expect(startData1.content_block.name).toBe("Bash");
+        expect(startData1.content_block.id).toBe("chatcmpl-tool-xxx");
+
+        // Second chunk: same id, but name is null (simulating glm-5.2 behavior)
+        const startEvents2 = converter.convertStreamEvent(JSON.stringify({
+            id: "chatcmpl-123",
+            object: "chat.completion.chunk",
+            created: 1677652288,
+            model: "gpt-4",
+            choices: [
+                {
+                    index: 0,
+                    delta: {
+                        tool_calls: [
+                            {
+                                index: 0,
+                                id: "chatcmpl-tool-xxx",
+                                type: "function",
+                                function: { name: null, arguments: '{"command": "ls"}' },
+                            },
+                        ],
+                    },
+                    finish_reason: null,
+                },
+            ],
+        }));
+
+        // Should NOT create another content_block_start, only input_json_delta
+        expect(startEvents2.map((e) => e.event)).toEqual(["content_block_delta"]);
+        const deltaData2 = parseStreamEventData(startEvents2, 0);
+        expect(deltaData2.delta.type).toBe("input_json_delta");
+        expect(deltaData2.delta.partial_json).toBe('{"command": "ls"}');
+
+        // Third chunk: same id, name is still null
+        const startEvents3 = converter.convertStreamEvent(JSON.stringify({
+            id: "chatcmpl-123",
+            object: "chat.completion.chunk",
+            created: 1677652288,
+            model: "gpt-4",
+            choices: [
+                {
+                    index: 0,
+                    delta: {
+                        tool_calls: [
+                            {
+                                index: 0,
+                                id: "chatcmpl-tool-xxx",
+                                type: "function",
+                                function: { name: null, arguments: " doc" },
+                            },
+                        ],
+                    },
+                    finish_reason: null,
+                },
+            ],
+        }));
+
+        // Should still NOT create another content_block_start
+        expect(startEvents3.map((e) => e.event)).toEqual(["content_block_delta"]);
+        const deltaData3 = parseStreamEventData(startEvents3, 0);
+        expect(deltaData3.delta.type).toBe("input_json_delta");
+        expect(deltaData3.delta.partial_json).toBe(" doc");
+    });
+
     it("should convert finish_reason to proper stop events", () => {
         converter.convertStreamEvent(JSON.stringify({
             id: "chatcmpl-123",
