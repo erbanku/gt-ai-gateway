@@ -59,7 +59,7 @@ describe("AI Responses API", () => {
                 type: "other",
                 name: "Mock Responses Vendor",
                 token: "mock-responses-token",
-                urls: { openai: mockBaseUrl },
+                urls: { responses: mockBaseUrl },
             },
             adminToken,
         );

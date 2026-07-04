@@ -39,7 +39,7 @@ async function setupResponsesFixture(): Promise<ResponsesFixture> {
             type: "other",
             name: "Mock Responses Log Vendor",
             token: "mock-responses-log-token",
-            urls: { openai: config.UPSTREAM_CONFIG.mock.url },
+            urls: { responses: config.UPSTREAM_CONFIG.mock.url },
         },
         adminToken,
     );
