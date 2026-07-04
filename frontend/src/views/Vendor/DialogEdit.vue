@@ -178,7 +178,7 @@ function open(vendor: Vendor) {
     formState.type = vendor.type;
     formState.name = vendor.name;
     formState.token = vendor.token;
-    formState.auth_mode = vendor.auth_mode || 'bearer_token';
+    formState.auth_mode = vendor.config?.auth_mode || 'bearer_token';
 
     // 加载已保存的自定义 URLs
     urlsForm.splice(0, urlsForm.length);
@@ -218,7 +218,7 @@ async function handleOk() {
             name: formState.name,
             token: formState.token,
             urls,
-            auth_mode: formState.auth_mode,
+            config: { auth_mode: formState.auth_mode },
         };
 
         loading.value = true;

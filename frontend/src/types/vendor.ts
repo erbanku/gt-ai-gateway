@@ -8,12 +8,17 @@ export interface VendorUrls {
     [key: string]: string;
 }
 
+export interface VendorConfig {
+    auth_mode?: VendorAuthMode;
+    [key: string]: any;
+}
+
 export interface Vendor extends BaseEntity {
     type: VendorType;
     name: string;
     token: string;
     urls: VendorUrls;
-    auth_mode: VendorAuthMode;
+    config: VendorConfig;
     model_count: number;
 }
 
@@ -22,7 +27,7 @@ export interface CreateVendorRequest {
     name: string;
     token: string;
     urls?: VendorUrls;
-    auth_mode?: VendorAuthMode;
+    config?: VendorConfig;
 }
 
 export interface UpdateVendorRequest {
@@ -30,7 +35,7 @@ export interface UpdateVendorRequest {
     name?: string;
     token?: string;
     urls?: VendorUrls;
-    auth_mode?: VendorAuthMode;
+    config?: VendorConfig;
 }
 
 export interface VendorQuery extends TableQuery {
