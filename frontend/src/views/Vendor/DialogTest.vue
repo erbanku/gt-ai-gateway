@@ -113,6 +113,10 @@
                             <span class="url-label">实际 URL:</span>
                             <code class="url-text">{{ result.url }}</code>
                         </div>
+                        <div v-if="result.proxy" class="result-proxy">
+                            <span class="proxy-label">代理:</span>
+                            <code class="proxy-text">{{ result.proxy.type.toUpperCase() }} {{ result.proxy.url }}</code>
+                        </div>
                     </a-space>
                 </div>
 
@@ -530,6 +534,26 @@ defineExpose({ open });
 
 .url-text {
     color: #595959;
+    font-family: monospace;
+}
+
+.result-proxy {
+    margin-top: 8px;
+    font-size: 12px;
+    word-break: break-all;
+    background: #f0f2f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.proxy-label {
+    color: #8c8c8c;
+    margin-right: 8px;
+    font-weight: 500;
+}
+
+.proxy-text {
+    color: #1677ff;
     font-family: monospace;
 }
 

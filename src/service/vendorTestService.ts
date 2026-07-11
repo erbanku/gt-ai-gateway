@@ -17,6 +17,7 @@ export interface TestVendorResult {
     url: string;
     converted_from?: string;
     converted_to?: string;
+    proxy?: { type: string; url: string };
     request_method: string;
     request_headers: Record<string, string>;
     request_body: unknown;
@@ -115,13 +116,20 @@ export async function testVendorConnectivity(
     const url = vendor.getUrlByFormat(requestFormat);
     const { headers, body } = buildRequest(vendor, requestFormat, model);
 
+    // 代理信息
+    const proxyConfig = vendor.config.proxy;
+    const proxyInfo = proxyConfig && proxyConfig.type !== "none" && proxyConfig.url
+        ? { type: proxyConfig.type, url: proxyConfig.url }
+        : undefined;
+
     let requestBodyDisplay: unknown = body;
     try {
         requestBodyDisplay = JSON.parse(body);
     } catch {}
 
     try {
-        console.log(`[testVendor] Testing vendor ${vendor.name} (${vendor.id}) with model ${model} at ${url}`);
+        const proxyLog = proxyInfo ? ` via ${proxyInfo.type} proxy ${proxyInfo.url}` : "";
+        console.log(`[testVendor] Testing vendor ${vendor.name} (${vendor.id}) with model ${model} at ${url}${proxyLog}`);
         const startTime = Date.now();
         const dispatcher = await fetchUtil.getDispatcher(vendor.config);
         const response = await fetch(url, {
@@ -146,6 +154,7 @@ export async function testVendorConnectivity(
             url,
             converted_from: convertedFrom,
             converted_to: convertedTo,
+            proxy: proxyInfo,
             request_method: "POST",
             request_headers: sanitizeHeaders(headers),
             request_body: requestBodyDisplay,
@@ -163,6 +172,7 @@ export async function testVendorConnectivity(
             success: false,
             error: errorMessage,
             url,
+            proxy: proxyInfo,
             request_method: "POST",
             request_headers: sanitizeHeaders(headers),
             request_body: requestBodyDisplay,
