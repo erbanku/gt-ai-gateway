@@ -102,11 +102,34 @@ tests/
     └── requestHelper.ts # HTTP 请求封装
 ```
 
+### 测试分类标准
+
+1. **单元测试 (`tests/unit/`)**
+   - 只验证单个函数、类或模块的本地逻辑。
+   - 不访问真实数据库，不运行 migration，不连接 ORM，不使用 `dbHelper`。
+   - 不依赖测试服务器、HTTP API、Cloudflare D1/R2 binding、文件系统持久化或外部进程。
+   - 如需隔离依赖，应使用 mock/stub/fake，而不是连接真实资源。
+
+2. **集成测试 (`tests/integration/`)**
+   - 只要测试需要访问真实数据库、ORM 连接、migration 后的表结构、对象存储、文件系统持久化或多个 service 的真实协作，就应归类为集成测试。
+   - service 层测试如果需要读写 DB，也属于集成测试，不应放在 `tests/unit/`。
+   - 通过 HTTP API 验证完整业务流程的测试，可以放在 `tests/integration/`；面向具体 REST 接口契约的测试放在 `tests/api/`。
+
+3. **API 测试 (`tests/api/`)**
+   - 通过 `requestHelper` 调用测试服务器，验证接口状态码、响应结构、鉴权、数据持久化和端到端业务行为。
+   - API 测试的数据准备、业务操作和结果验证都应通过 API 完成，不直接访问数据库来插入、修改或判断业务数据。
+   - 除统一测试隔离所需的 `dbHelper.truncate()` 外，API 测试不应使用 `dbHelper.execute()`、`dbHelper.query()`、ORM model query 或原始 SQL 直接操作数据库。
+   - Worker 模式下的集成覆盖通常通过 API 请求进入 `wrangler dev` 启动的真实 Worker 服务完成；测试进程本身不直接持有 Worker 的 `DB`、`OBJECT_BUCKET` 等 binding。
+
+4. **Node-only 测试 (`*.node.test.ts`)**
+   - 文件名后缀只表示该测试依赖 Node.js 本地能力，worker 模式测试套件会排除这些用例。
+   - Node-only 不等于单元测试。若测试访问 DB 或 ORM，应放在 `tests/integration/`，例如 `tests/integration/example.node.test.ts`。
+
 ### 测试用例
 
 * 测试文件名中不带有 negative 为正向用例，即验证应该成功的情况
 * 带有 negative 的为负向用例，即验证应该失败的情况
-* 带有 `.node.test.ts` 后缀的用例为 Node-only 测试，适用于依赖本地文件系统或 Node SQLite ORM 连接的场景，worker 模式测试套件会排除这些用例
+* 带有 `.node.test.ts` 后缀的用例为 Node-only 测试，适用于依赖本地文件系统或 Node 专属运行时能力的场景，worker 模式测试套件会排除这些用例。若该测试访问数据库或 ORM，应按集成测试归档
 
 ---
 
