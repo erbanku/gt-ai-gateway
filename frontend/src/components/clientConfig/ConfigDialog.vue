@@ -237,12 +237,12 @@
                     allow-clear
                     :disabled="isDetail"
                 >
-                    <a-select-option value="low">低 (low)</a-select-option>
-                    <a-select-option value="medium">中 (medium)</a-select-option>
-                    <a-select-option value="high">高 (high)</a-select-option>
-                    <a-select-option value="xhigh">极高 (xhigh)</a-select-option>
-                    <a-select-option value="max">最大 (max)</a-select-option>
-                    <a-select-option value="ultracode">Ultra 模式 (ultracode)</a-select-option>
+                    <a-select-option value="low">low</a-select-option>
+                    <a-select-option value="medium">medium</a-select-option>
+                    <a-select-option value="high">high</a-select-option>
+                    <a-select-option value="xhigh">xhigh</a-select-option>
+                    <a-select-option value="max">max</a-select-option>
+                    <a-select-option value="ultracode">ultracode</a-select-option>
                 </a-select>
             </a-form-item>
         </a-form>
