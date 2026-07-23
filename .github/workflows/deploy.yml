@@ -1,20 +1,38 @@
-name: Deploy to Cloudflare
+name: Deploy Latest Release to Cloudflare
 
 on:
-  push:
-    branches:
-      - master
+  release:
+    types:
+      - published
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test-node:
     name: Test (Node Mode)
     runs-on: ubuntu-latest
-    if: github.repository != 'alexazhou/gt_ai_gateway'
+    if: github.repository == 'alexazhou/gt_ai_gateway'
+
     steps:
-      - name: Checkout code
+      - name: Resolve latest release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="$(gh api \
+            --header "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/releases/latest" \
+            --jq '.tag_name')"
+
+          test -n "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout latest release
         uses: actions/checkout@v6
         with:
+          ref: ${{ steps.release.outputs.tag }}
           submodules: recursive
 
       - name: Setup Node.js
@@ -23,12 +41,12 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           npm ci
-          cd frontend && npm ci && cd ..
+          npm --prefix frontend ci
 
-      - name: Build Frontend
+      - name: Build frontend
         run: npm run frontend:build
 
       - name: Run type check
@@ -40,11 +58,26 @@ jobs:
   test-worker:
     name: Test (Worker Mode)
     runs-on: ubuntu-latest
-    if: github.repository != 'alexazhou/gt_ai_gateway'
+    if: github.repository == 'alexazhou/gt_ai_gateway'
+
     steps:
-      - name: Checkout code
+      - name: Resolve latest release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="$(gh api \
+            --header "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/releases/latest" \
+            --jq '.tag_name')"
+
+          test -n "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout latest release
         uses: actions/checkout@v6
         with:
+          ref: ${{ steps.release.outputs.tag }}
           submodules: recursive
 
       - name: Setup Node.js
@@ -53,12 +86,12 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           npm ci
-          cd frontend && npm ci && cd ..
+          npm --prefix frontend ci
 
-      - name: Build Frontend
+      - name: Build frontend
         run: npm run frontend:build
 
       - name: Run tests (Worker mode)
@@ -66,13 +99,34 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: [test-node, test-worker]
+    needs:
+      - test-node
+      - test-worker
     runs-on: ubuntu-latest
-    if: github.repository != 'alexazhou/gt_ai_gateway'
+    if: >
+      github.repository == 'alexazhou/gt_ai_gateway' &&
+      needs.test-node.result == 'success' &&
+      needs.test-worker.result == 'success'
+
     steps:
-      - name: Checkout code
+      - name: Resolve latest release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="$(gh api \
+            --header "Accept: application/vnd.github+json" \
+            "/repos/${GITHUB_REPOSITORY}/releases/latest" \
+            --jq '.tag_name')"
+
+          test -n "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Deploying latest release: $TAG"
+
+      - name: Checkout latest release
         uses: actions/checkout@v6
         with:
+          ref: ${{ steps.release.outputs.tag }}
           submodules: recursive
 
       - name: Setup Node.js
@@ -81,12 +135,12 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
           npm ci
-          cd frontend && npm ci && cd ..
+          npm --prefix frontend ci
 
-      - name: Build Frontend
+      - name: Build frontend
         run: npm run frontend:build
 
       - name: Deploy to Cloudflare
@@ -95,6 +149,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ROOT_TOKEN: ${{ secrets.ROOT_TOKEN }}
         run: |
-          # The deploy script will verify environment variables, token permissions,
-          # create the database and R2 bucket if needed, run migrations, and deploy the worker.
-          npm run deploy:cloudflare -- --auto-create-db --auto-create-r2 --auto-migrate --auto-create-root-token
+          npm run deploy:cloudflare -- \
+            --auto-create-db \
+            --auto-create-r2 \
+            --auto-migrate \
+            --auto-create-root-token
